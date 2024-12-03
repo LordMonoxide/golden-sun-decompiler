@@ -1,0 +1,22 @@
+plugins {
+  id 'java'
+}
+
+group = 'org.goldensun'
+version = '1.0-SNAPSHOT'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
+  implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.1'
+  implementation group: 'org.fusesource.jansi', name: 'jansi', version: '2.3.2'
+
+  implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.26.2'
+}
+
+test {
+  useJUnitPlatform()
+}
