@@ -1,5 +1,6 @@
 package org.goldensun.disassembler.ops;
 
+import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 
 public class Mov extends OpType {
@@ -8,9 +9,9 @@ public class Mov extends OpType {
   }
 
   @Override
-  public OpState parse(final int address, final int op) {
+  public OpState parse(final DisassemblyRange range, final int address, final int op) {
     final Register dst = Register.values()[op >> 8 & 0x7];
     final int imm = op & 0xff;
-    return new MovState(address, this, dst, imm);
+    return new MovState(range, address, this, dst, imm);
   }
 }

@@ -1,5 +1,7 @@
 package org.goldensun.disassembler.ops;
 
+import org.goldensun.disassembler.DisassemblyRange;
+
 public class OpType {
   public final String name;
 
@@ -31,7 +33,7 @@ public class OpType {
     return this.readsOverflow() || this.readsCarry() || this.readsZero() || this.readsNegative();
   }
 
-  public OpState parse(final int address, final int op) {
+  public OpState parse(final DisassemblyRange range, final int address, final int op) {
     throw new RuntimeException("0x%x: %s parsing not implemented".formatted(address, this.name));
   }
 

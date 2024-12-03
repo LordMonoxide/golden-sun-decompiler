@@ -2,9 +2,11 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
+import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.OperatorBinary;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
+import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
 public class LslState extends OpState {
@@ -12,8 +14,8 @@ public class LslState extends OpState {
   public final Register src;
   public final int amount;
 
-  public LslState(final int address, final OpType opType, final Register dst, final Register src, final int amount) {
-    super(address, opType);
+  public LslState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final Register src, final int amount) {
+    super(range, address, opType);
     this.dst = dst;
     this.src = src;
     this.amount = amount;
@@ -39,6 +41,15 @@ public class LslState extends OpState {
     state.registerUsage.get(this.dst).add(RegisterUsage.WRITE);
     state.registerUsage.get(this.src).add(RegisterUsage.READ);
     state.registerValues.put(this.dst, Value.aluBinary(this.src, this.amount, OperatorBinary.LSL));
+  }
+
+  @Override
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+    if(hasDependant) {
+      output.addLine(this, "%1$s = CPU.lslT(%2$s, %3$d);".formatted(this.dst.fullName(), this.src.fullName(), this.amount));
+    } else {
+      output.addLine(this, "%1$s = %2$s << %3$d;".formatted(this.dst.fullName(), this.src.fullName(), this.amount));
+    }
   }
 
   @Override

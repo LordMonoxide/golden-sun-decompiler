@@ -2,8 +2,10 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
+import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
+import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
 public class LdrImmState extends OpState {
@@ -11,8 +13,8 @@ public class LdrImmState extends OpState {
   public final Register base;
   public final int offset;
 
-  public LdrImmState(final int address, final OpType opType, final Register dst, final Register base, final int offset) {
-    super(address, opType);
+  public LdrImmState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final Register base, final int offset) {
+    super(range, address, opType);
     this.dst = dst;
     this.base = base;
     this.offset = offset;
@@ -23,6 +25,11 @@ public class LdrImmState extends OpState {
     state.registerUsage.get(this.dst).add(RegisterUsage.WRITE);
     state.registerUsage.get(this.base).add(RegisterUsage.READ);
     state.registerValues.put(this.dst, Value.memory(4, this.base, this.offset, false));
+  }
+
+  @Override
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+    output.addLine(this, "%s = MEMORY.ref(4, %s + 0x%x).get();".formatted(this.dst.fullName(), this.base.fullName(), this.offset));
   }
 
   @Override

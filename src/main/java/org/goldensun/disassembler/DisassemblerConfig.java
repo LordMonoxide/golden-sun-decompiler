@@ -1,5 +1,7 @@
 package org.goldensun.disassembler;
 
+import org.goldensun.Util;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,5 +20,19 @@ public class DisassemblerConfig {
     }
 
     return false;
+  }
+
+  public boolean dataContains(final int address) {
+    for(final DataRange range : this.dataRanges) {
+      if(range.contains(address)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public int read(final int offset, final int size) {
+    return Util.get(this.data, offset, size);
   }
 }

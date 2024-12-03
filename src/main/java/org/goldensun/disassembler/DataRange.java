@@ -10,4 +10,8 @@ public class DataRange {
     this.start = start - baseAddr;
     this.end = end - baseAddr;
   }
+
+  public boolean contains(final int address) {
+    return address >= this.start && address < this.end + 4;
+  }
 }

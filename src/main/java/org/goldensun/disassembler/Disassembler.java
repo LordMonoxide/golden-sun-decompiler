@@ -23,7 +23,7 @@ public class Disassembler {
     }
 
     for(int address = range.start; address <= range.end; ) {
-      final OpState op = OpTypes.parse(data, address);
+      final OpState op = OpTypes.parse(range, data, address);
       ops.put(address, op);
       address += op.opType.getSize();
     }

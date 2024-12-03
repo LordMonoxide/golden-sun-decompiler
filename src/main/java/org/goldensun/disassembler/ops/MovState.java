@@ -2,16 +2,18 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
+import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
+import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
 public class MovState extends OpState {
   public final Register dst;
   public final int imm;
 
-  public MovState(final int address, final OpType opType, final Register dst, final int imm) {
-    super(address, opType);
+  public MovState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final int imm) {
+    super(range, address, opType);
     this.dst = dst;
     this.imm = imm;
   }
@@ -30,6 +32,15 @@ public class MovState extends OpState {
   public void run(final DisassemblerConfig config, final CpuState state) {
     state.registerUsage.get(this.dst).add(RegisterUsage.WRITE);
     state.registerValues.put(this.dst, Value.constant(this.imm));
+  }
+
+  @Override
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+    if(hasDependant) {
+      output.addLine(this, "%1$s = CPU.movT(0x%2$x);".formatted(this.dst.fullName(), this.imm));
+    } else {
+      output.addLine(this, "%1$s = 0x%2$x;".formatted(this.dst.fullName(), this.imm));
+    }
   }
 
   @Override

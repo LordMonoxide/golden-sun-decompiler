@@ -1,13 +1,14 @@
 package org.goldensun.disassembler.ops;
 
+import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 
 public class LsrAluState extends OpState {
   public final Register dst;
   public final Register src;
 
-  public LsrAluState(final int address, final OpType opType, final Register dst, final Register src) {
-    super(address, opType);
+  public LsrAluState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final Register src) {
+    super(range, address, opType);
     this.dst = dst;
     this.src = src;
   }

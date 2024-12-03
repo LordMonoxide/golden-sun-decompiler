@@ -1,5 +1,7 @@
 package org.goldensun.disassembler.ops;
 
+import org.goldensun.disassembler.DisassemblyRange;
+
 public final class OpTypes {
   private OpTypes() { }
 
@@ -11,9 +13,9 @@ public final class OpTypes {
 
   // THUMB2 (add/sub)
   public static final OpType ADD_REG = new AddReg();
-  public static final OpType SUB_REG = new OpType("SUB_REG");
+  public static final OpType SUB_REG = new SubReg();
   public static final OpType ADD_IMM = new AddImm();
-  public static final OpType SUB_IMM = new OpType("SUB_IMM");
+  public static final OpType SUB_IMM = new SubImm();
   private static final OpType[] THUMB2 = {ADD_REG, SUB_REG, ADD_IMM, SUB_IMM};
 
   // THUMB3 (mov/cmp/add/sub unary)
@@ -44,7 +46,7 @@ public final class OpTypes {
 
   // THUMB5 (hi register add/cmp/mov/bx/blx)
   public static final OpType ADD_HI = new AddHi();
-  public static final OpType CMP_HI = new OpType("CMP_HI");
+  public static final OpType CMP_HI = new CmpHi();
   public static final OpType MOV_HI = new MovHi();
   public static final OpType BX = new Bx();
   private static final OpType[] THUMB5 = {ADD_HI, CMP_HI, MOV_HI, BX};
@@ -99,25 +101,25 @@ public final class OpTypes {
   private static final OpType[] THUMB14 = {PUSH, POP};
 
   // THUMB15 (multiple load/store)
-  public static final OpType STMIA = new Push();
-  public static final OpType LDMIA = new Pop();
+  public static final OpType STMIA = new Stmia();
+  public static final OpType LDMIA = new Ldmia();
   private static final OpType[] THUMB15 = {STMIA, LDMIA};
 
   // THUMB16 (conditional branch)
-  public static final OpType BEQ = new ConditionalBranch("BEQ", false, false, true, false);
-  public static final OpType BNE = new ConditionalBranch("BNE", false, false, true, false);
-  public static final OpType BCS = new ConditionalBranch("BCS", false, true, false, false);
-  public static final OpType BCC = new ConditionalBranch("BCC", false, true, false, false);
-  public static final OpType BMI = new ConditionalBranch("BMI", false, false, false, true);
-  public static final OpType BPL = new ConditionalBranch("BPL", false, false, false, true);
-  public static final OpType BVS = new ConditionalBranch("BVS", true, false, false, false);
-  public static final OpType BVC = new ConditionalBranch("BVC", true, false, false, false);
-  public static final OpType BHI = new ConditionalBranch("BHI", false, true, true, false);
-  public static final OpType BLS = new ConditionalBranch("BLS", false, true, true, false);
-  public static final OpType BGE = new ConditionalBranch("BGE", true, false, false, true);
-  public static final OpType BLT = new ConditionalBranch("BLT", true, false, false, true);
-  public static final OpType BGT = new ConditionalBranch("BGT", true, false, true, true);
-  public static final OpType BLE = new ConditionalBranch("BLE", true, false, true, true);
+  public static final OpType BEQ = new ConditionalBranch("BEQ", false, false, true, false, "Z", "==");
+  public static final OpType BNE = new ConditionalBranch("BNE", false, false, true, false, "!Z", "!=");
+  public static final OpType BCS = new ConditionalBranch("BCS", false, true, false, false, "C", "unsigned >=");
+  public static final OpType BCC = new ConditionalBranch("BCC", false, true, false, false, "!C", "unsigned <");
+  public static final OpType BMI = new ConditionalBranch("BMI", false, false, false, true, "N", "negative");
+  public static final OpType BPL = new ConditionalBranch("BPL", false, false, false, true, "!N", "positive or zero");
+  public static final OpType BVS = new ConditionalBranch("BVS", true, false, false, false, "V", "overflow");
+  public static final OpType BVC = new ConditionalBranch("BVC", true, false, false, false, "!V", "no overflow");
+  public static final OpType BHI = new ConditionalBranch("BHI", false, true, true, false, "C && !Z", "unsigned >");
+  public static final OpType BLS = new ConditionalBranch("BLS", false, true, true, false, "!C || Z", "unsigned <=");
+  public static final OpType BGE = new ConditionalBranch("BGE", true, false, false, true, "N == V", ">=");
+  public static final OpType BLT = new ConditionalBranch("BLT", true, false, false, true, "N != V", "<");
+  public static final OpType BGT = new ConditionalBranch("BGT", true, false, true, true, "!Z && N == V", ">");
+  public static final OpType BLE = new ConditionalBranch("BLE", true, false, true, true, "Z || N != V", "<=");
   private static final OpType[] THUMB16 = {BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE};
 
   // THUMB17 (SWI)
@@ -131,102 +133,102 @@ public final class OpTypes {
   public static final OpType BLX = new Bl("BLX");
   private static final OpType[] THUMB19 = {BL, BLX};
 
-  public static OpState parse(final byte[] data, final int offset) {
+  public static OpState parse(final DisassemblyRange range, final byte[] data, final int offset) {
     final int op = (data[offset + 1] & 0xff) << 8 | data[offset] & 0xff;
 
     // THUMB2 (must be first)
     if((op & 0xf800) == 0x1800) {
-      return THUMB2[op >>> 9 & 0x3].parse(offset, op);
+      return THUMB2[op >>> 9 & 0x3].parse(range, offset, op);
     }
 
     // THUMB1
     if((op & 0xe000) == 0x0) {
-      return THUMB1[op >>> 11 & 0x3].parse(offset, op);
+      return THUMB1[op >>> 11 & 0x3].parse(range, offset, op);
     }
 
     // THUMB3
     if((op & 0xe000) == 0x2000) {
-      return THUMB3[op >>> 11 & 0x3].parse(offset, op);
+      return THUMB3[op >>> 11 & 0x3].parse(range, offset, op);
     }
 
     // THUMB4
     if((op & 0xfc00) == 0x4000) {
-      return THUMB4[op >>> 6 & 0xf].parse(offset, op);
+      return THUMB4[op >>> 6 & 0xf].parse(range, offset, op);
     }
 
     // THUMB5
     if((op & 0xfc00) == 0x4400) {
-      return THUMB5[op >>> 8 & 0x3].parse(offset, op);
+      return THUMB5[op >>> 8 & 0x3].parse(range, offset, op);
     }
 
     // THUMB6
     if((op & 0xf800) == 0x4800) {
-      return LDRPC.parse(offset, op);
+      return LDRPC.parse(range, offset, op);
     }
 
     // THUMB7/8
     if((op & 0xf000) == 0x5000) {
       if((op & 0x200) == 0) {
-        return THUMB7[op >>> 10 & 0x3].parse(offset, op);
+        return THUMB7[op >>> 10 & 0x3].parse(range, offset, op);
       }
 
-      return THUMB8[op >>> 10 & 0x3].parse(offset, op);
+      return THUMB8[op >>> 10 & 0x3].parse(range, offset, op);
     }
 
     // THUMB9
     if((op & 0xe000) == 0x6000) {
-      return THUMB9[op >>> 11 & 0x3].parse(offset, op);
+      return THUMB9[op >>> 11 & 0x3].parse(range, offset, op);
     }
 
     // THUMB10
     if((op & 0xf000) == 0x8000) {
-      return THUMB10[op >>> 11 & 0x1].parse(offset, op);
+      return THUMB10[op >>> 11 & 0x1].parse(range, offset, op);
     }
 
     // THUMB11
     if((op & 0xf000) == 0x9000) {
-      return THUMB11[op >>> 11 & 0x1].parse(offset, op);
+      return THUMB11[op >>> 11 & 0x1].parse(range, offset, op);
     }
 
     // THUMB12
     if((op & 0xf000) == 0xa000) {
-      return THUMB12[op >>> 11 & 0x1].parse(offset, op);
+      return THUMB12[op >>> 11 & 0x1].parse(range, offset, op);
     }
 
     // THUMB13
     if((op & 0xff00) == 0xb000) {
-      return THUMB13[op >>> 7 & 0x1].parse(offset, op);
+      return THUMB13[op >>> 7 & 0x1].parse(range, offset, op);
     }
 
     // THUMB14
     if((op & 0xf600) == 0xb400) {
-      return THUMB14[op >>> 11 & 0x1].parse(offset, op);
+      return THUMB14[op >>> 11 & 0x1].parse(range, offset, op);
     }
 
     // THUMB15
     if((op & 0xf000) == 0xc000) {
-      return THUMB15[op >>> 11 & 0x1].parse(offset, op);
+      return THUMB15[op >>> 11 & 0x1].parse(range, offset, op);
     }
 
     // THUMB17
     if((op & 0xff00) == 0xdf00) {
-      return SWI.parse(offset, op);
+      return SWI.parse(range, offset, op);
     }
 
     // THUMB16
     if((op & 0xf000) == 0xd000) {
-      return THUMB16[op >>> 8 & 0xf].parse(offset, op);
+      return THUMB16[op >>> 8 & 0xf].parse(range, offset, op);
     }
 
     // THUMB18
     if((op & 0xf800) == 0xe000) {
-      return B.parse(offset, op);
+      return B.parse(range, offset, op);
     }
 
     // THUMB19
     if((op & 0xf000) == 0xf000) {
       final int op2 = (data[offset + 3] & 0xff) << 8 | data[offset + 2] & 0xff;
-      return THUMB19[1 - (op2 >>> 12 & 0x1)].parse(offset, op2 << 16 | op);
+      return THUMB19[1 - (op2 >>> 12 & 0x1)].parse(range, offset, op2 << 16 | op);
     }
 
     throw new RuntimeException("Unknown op 0x%x".formatted(op));

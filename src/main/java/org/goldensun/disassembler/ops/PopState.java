@@ -1,6 +1,9 @@
 package org.goldensun.disassembler.ops;
 
+import org.goldensun.disassembler.DisassemblerConfig;
+import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.TranslatorOutput;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -8,9 +11,16 @@ import java.util.stream.Collectors;
 public class PopState extends OpState {
   public final Register[] registers;
 
-  public PopState(final int address, final OpType opType, final Register[] registers) {
-    super(address, opType);
+  public PopState(final DisassemblyRange range, final int address, final OpType opType, final Register[] registers) {
+    super(range, address, opType);
     this.registers = registers;
+  }
+
+  @Override
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+    for(final Register r : this.registers) {
+      output.addLine(this, "%s = CPU.pop();".formatted(r.fullName()));
+    }
   }
 
   @Override

@@ -10,6 +10,7 @@ import org.goldensun.disassembler.FlowControl;
 import org.goldensun.disassembler.InstructionSet;
 import org.goldensun.disassembler.ReferenceGraph;
 import org.goldensun.disassembler.Tracer;
+import org.goldensun.disassembler.Translator;
 import org.goldensun.disassembler.ops.OpState;
 
 import java.io.IOException;
@@ -33,11 +34,9 @@ public final class Main {
 
   public static void main(final String[] args) throws IOException {
     final DisassemblerConfig config = new DisassemblerConfig();
-    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a5788, 0x80a580a));
-    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a5810, 0x80a5948));
-    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a595c, 0x80a5a96));
-    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a5aac, 0x80a5b90));
-    config.dataRanges.add(new DataRange(0x80000000, 0x80a5788, 0x80a5b90));
+    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a3ef0, 0x80a3f42));
+    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a3f6c, 0x80a4096));
+    config.dataRanges.add(new DataRange(0x8000000, 0x80a3ef0, 0x80a40a8));
     config.data = Files.readAllBytes(Path.of("./game.rom"));
 
     LOGGER.info("Disassembling code...");
@@ -73,5 +72,8 @@ public final class Main {
 
 //    final Solver solver = new Solver();
 //    solver.solve(config, ops);
+
+    final Translator translator = new Translator();
+    translator.translate(config, ops, conditionDependencies);
   }
 }

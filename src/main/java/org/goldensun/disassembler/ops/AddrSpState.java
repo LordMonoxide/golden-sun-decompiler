@@ -2,16 +2,18 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
+import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
+import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
 public class AddrSpState extends OpState {
   public final Register dst;
   public final int offset;
 
-  public AddrSpState(final int address, final OpType opType, final Register dst, final int offset) {
-    super(address, opType);
+  public AddrSpState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final int offset) {
+    super(range, address, opType);
     this.dst = dst;
     this.offset = offset;
   }
@@ -20,6 +22,11 @@ public class AddrSpState extends OpState {
   public void run(final DisassemblerConfig config, final CpuState state) {
     state.registerUsage.get(this.dst).add(RegisterUsage.WRITE);
     state.registerValues.put(this.dst, Value.address(Register.R13_SP, this.offset));
+  }
+
+  @Override
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+    output.addLine(this, "%s = %s + 0x%x;".formatted(this.dst.fullName(), Register.R13_SP.fullName(), this.offset));
   }
 
   @Override

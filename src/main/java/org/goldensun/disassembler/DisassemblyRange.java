@@ -13,7 +13,7 @@ public class DisassemblyRange {
     this.end = end - baseAddr;
   }
 
-  public boolean contains(int address) {
+  public boolean contains(final int address) {
     return address >= this.start && address < this.end + this.instructionSet.opSize;
   }
 }

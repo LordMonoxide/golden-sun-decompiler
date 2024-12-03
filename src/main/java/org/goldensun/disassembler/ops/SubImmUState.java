@@ -1,13 +1,16 @@
 package org.goldensun.disassembler.ops;
 
+import org.goldensun.disassembler.DisassemblerConfig;
+import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.TranslatorOutput;
 
 public class SubImmUState extends OpState {
   public final Register dst;
   public final int immediate;
 
-  public SubImmUState(final int address, final OpType opType, final Register dst, final int immediate) {
-    super(address, opType);
+  public SubImmUState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final int immediate) {
+    super(range, address, opType);
     this.dst = dst;
     this.immediate = immediate;
   }
@@ -30,6 +33,15 @@ public class SubImmUState extends OpState {
   @Override
   public boolean negative() {
     return true;
+  }
+
+  @Override
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+    if(hasDependant) {
+      output.addLine(this, "%1$s = CPU.subT(%1$s, 0x%2$x);".formatted(this.dst.fullName(), this.immediate));
+    } else {
+      output.addLine(this, "%1$s = %1$s - 0x%2$x;".formatted(this.dst.fullName(), this.immediate));
+    }
   }
 
   @Override
