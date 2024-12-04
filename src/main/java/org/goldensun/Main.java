@@ -9,6 +9,7 @@ import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.FlowControl;
 import org.goldensun.disassembler.InstructionSet;
 import org.goldensun.disassembler.ReferenceGraph;
+import org.goldensun.disassembler.SwitchConfig;
 import org.goldensun.disassembler.Tracer;
 import org.goldensun.disassembler.Translator;
 import org.goldensun.disassembler.ops.OpState;
@@ -37,6 +38,7 @@ public final class Main {
     config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a3ef0, 0x80a3f42));
     config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a3f6c, 0x80a4096));
     config.dataRanges.add(new DataRange(0x8000000, 0x80a3ef0, 0x80a40a8));
+    config.switches.add(new SwitchConfig(0x80a3f44, 10));
     config.data = Files.readAllBytes(Path.of("./game.rom"));
 
     LOGGER.info("Disassembling code...");

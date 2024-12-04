@@ -8,7 +8,7 @@ import java.util.List;
 public class DisassemblerConfig {
   public final List<DisassemblyRange> disassemblyRanges = new ArrayList<>();
   public final List<DataRange> dataRanges = new ArrayList<>();
-  public final List<Integer> switches = new ArrayList<>();
+  public final List<SwitchConfig> switches = new ArrayList<>();
 
   public byte[] data;
 
