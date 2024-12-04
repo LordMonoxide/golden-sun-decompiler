@@ -39,7 +39,7 @@ public final class OpTypes {
   public static final OpType CMP_ALU = new CmpAlu();
   public static final OpType CMN_ALU = new OpType("CMN_ALU");
   public static final OpType ORR_ALU = new Alu("ORR_ALU", OrrAluState::new);
-  public static final OpType MUL_ALU = new OpType("MUL_ALU");
+  public static final OpType MUL_ALU = new Alu("MUL_ALU", MulAluState::new);
   public static final OpType BIC_ALU = new OpType("BIC_ALU");
   public static final OpType MVN_ALU = new OpType("MVN_ALU");
   private static final OpType[] THUMB4 = {AND_ALU, EOR_ALU, LSL_ALU, LSR_ALU, ASR_ALU, ADC_ALU, SBC_ALU, ROR_ALU, TST_ALU, NEG_ALU, CMP_ALU, CMN_ALU, ORR_ALU, MUL_ALU, BIC_ALU, MVN_ALU};
