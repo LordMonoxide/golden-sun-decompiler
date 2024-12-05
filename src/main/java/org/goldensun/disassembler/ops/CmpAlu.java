@@ -9,8 +9,8 @@ public class CmpAlu extends OpType {
 
   @Override
   public OpState parse(final int address, final int op) {
-    final Register dst = Register.values()[op & 0x7];
-    final Register src = Register.values()[op >> 3 & 0x7];
-    return new CmpAluState(address, this, dst, src);
+    final Register a = Register.values()[op & 0x7];
+    final Register b = Register.values()[op >> 3 & 0x7];
+    return new CmpAluState(address, this, a, b);
   }
 }

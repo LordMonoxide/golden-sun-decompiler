@@ -2,11 +2,14 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
+import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
+import java.util.Map;
 import java.util.Set;
 
-public class OpState {
+public abstract class OpState {
   public final int address;
   public final OpType opType;
 
@@ -26,6 +29,8 @@ public class OpState {
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
     throw new RuntimeException("0x%x: %s translate not implemented".formatted(this.address, this.opType.name));
   }
+
+  public abstract void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage);
 
   public boolean overflow() {
     return false;

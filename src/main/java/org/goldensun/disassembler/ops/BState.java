@@ -1,8 +1,11 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
+import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
+import java.util.Map;
 import java.util.Set;
 
 public class BState extends OpState {
@@ -28,6 +31,11 @@ public class BState extends OpState {
 //    } else {
 //      output.addLine(this, "%s = FUN_%07x(); //TODO branch".formatted(Register.R0.fullName(), this.getDest()));
 //    }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+
   }
 
   public int getDest() {

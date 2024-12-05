@@ -2,13 +2,17 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
-public class CmpStateHi extends OpState {
+import java.util.Map;
+import java.util.Set;
+
+public class CmpHiState extends OpState {
   public final Register a;
   public final Register b;
 
-  public CmpStateHi(final int address, final OpType opType, final Register a, final Register b) {
+  public CmpHiState(final int address, final OpType opType, final Register a, final Register b) {
     super(address, opType);
     this.a = a;
     this.b = b;
@@ -41,6 +45,12 @@ public class CmpStateHi extends OpState {
     }
 
     output.addLine(this, "CPU.cmpT(%s, %s);".formatted(this.a.fullName(), this.b.fullName()));
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.a).add(RegisterUsage.READ);
+    usage.get(this.b).add(RegisterUsage.READ);
   }
 
   @Override

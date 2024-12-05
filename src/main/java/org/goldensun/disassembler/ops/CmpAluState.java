@@ -2,16 +2,20 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
-public class CmpAluState extends OpState {
-  public final Register dst;
-  public final Register src;
+import java.util.Map;
+import java.util.Set;
 
-  public CmpAluState(final int address, final OpType opType, final Register dst, final Register src) {
+public class CmpAluState extends OpState {
+  public final Register a;
+  public final Register b;
+
+  public CmpAluState(final int address, final OpType opType, final Register a, final Register b) {
     super(address, opType);
-    this.dst = dst;
-    this.src = src;
+    this.a = a;
+    this.b = b;
   }
 
   @Override
@@ -40,11 +44,17 @@ public class CmpAluState extends OpState {
       output.addLabel(this.address, "//TODO no dependant found for cmp");
     }
 
-    output.addLine(this, "CPU.cmpT(%s, %s);".formatted(this.dst.fullName(), this.src.fullName()));
+    output.addLine(this, "CPU.cmpT(%s, %s);".formatted(this.a.fullName(), this.b.fullName()));
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.a).add(RegisterUsage.READ);
+    usage.get(this.b).add(RegisterUsage.READ);
   }
 
   @Override
   public String toString() {
-    return "%s %s,%s".formatted(super.toString(), this.dst.name, this.src.name);
+    return "%s %s,%s".formatted(super.toString(), this.a.name, this.b.name);
   }
 }

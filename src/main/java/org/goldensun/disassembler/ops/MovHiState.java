@@ -10,6 +10,7 @@ import org.goldensun.disassembler.SwitchConfig;
 import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
+import java.util.Map;
 import java.util.Set;
 
 public class MovHiState extends OpState {
@@ -77,6 +78,12 @@ public class MovHiState extends OpState {
         }
       }
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
+    usage.get(this.src).add(RegisterUsage.READ);
   }
 
   @Override

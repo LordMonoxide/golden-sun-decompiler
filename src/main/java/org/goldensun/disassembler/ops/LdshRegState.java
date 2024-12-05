@@ -2,7 +2,11 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
+
+import java.util.Map;
+import java.util.Set;
 
 public class LdshRegState extends OpState {
   public final Register dst;
@@ -19,6 +23,13 @@ public class LdshRegState extends OpState {
   @Override
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
     output.addLine(this, "%s = MEMORY.ref(2, %s + %s).get();".formatted(this.dst.fullName(), this.base.fullName(), this.offset.fullName()));
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
+    usage.get(this.base).add(RegisterUsage.READ);
+    usage.get(this.offset).add(RegisterUsage.READ);
   }
 
   @Override

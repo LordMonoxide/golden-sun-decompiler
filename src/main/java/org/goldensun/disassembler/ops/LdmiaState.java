@@ -2,9 +2,12 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class LdmiaState extends OpState {
@@ -23,6 +26,15 @@ public class LdmiaState extends OpState {
       output.addLine(this, "%s = MEMORY.ref(4, %s).get();".formatted(register.fullName(), this.base.fullName()));
       output.addLine(this, "%s += 0x4;".formatted(this.base.fullName()));
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    for(final Register register : this.registers) {
+      usage.get(register).add(RegisterUsage.WRITE);
+    }
+
+    usage.get(this.base).add(RegisterUsage.READ);
   }
 
   @Override

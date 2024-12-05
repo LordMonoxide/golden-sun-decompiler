@@ -2,7 +2,11 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
+
+import java.util.Map;
+import java.util.Set;
 
 public class AddImmState extends OpState {
   public final Register dst;
@@ -43,6 +47,13 @@ public class AddImmState extends OpState {
     } else {
       output.addLine(this, "%s = %s + 0x%x;".formatted(this.dst.fullName(), this.src.fullName(), this.immediate));
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
+    usage.get(this.dst).add(RegisterUsage.READ);
+    usage.get(this.src).add(RegisterUsage.READ);
   }
 
   @Override

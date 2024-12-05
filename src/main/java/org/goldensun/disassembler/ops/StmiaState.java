@@ -2,9 +2,12 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class StmiaState extends OpState {
@@ -23,6 +26,15 @@ public class StmiaState extends OpState {
       output.addLine(this, "MEMORY.ref(4, %s).setu(%s);".formatted(this.base.fullName(), register.fullName()));
       output.addLine(this, "%s += 0x4;".formatted(this.base.fullName()));
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    for(final Register register : this.registers) {
+      usage.get(register).add(RegisterUsage.READ);
+    }
+
+    usage.get(this.base).add(RegisterUsage.READ);
   }
 
   @Override

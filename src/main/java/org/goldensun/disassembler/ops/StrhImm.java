@@ -9,9 +9,9 @@ public class StrhImm extends OpType {
 
   @Override
   public OpState parse(final int address, final int op) {
-    final Register dst = Register.values()[op & 0x7];
+    final Register src = Register.values()[op & 0x7];
     final Register base = Register.values()[op >> 3 & 0x7];
     final int offset = (op >> 6 & 0x1f) * 0x2;
-    return new StrhImmState(address, this, dst, base, offset);
+    return new StrhImmState(address, this, src, base, offset);
   }
 }

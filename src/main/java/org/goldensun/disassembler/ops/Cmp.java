@@ -9,8 +9,8 @@ public class Cmp extends OpType {
 
   @Override
   public OpState parse(final int address, final int op) {
-    final Register dst = Register.values()[op >> 8 & 0x7];
+    final Register src = Register.values()[op >> 8 & 0x7];
     final int immediate = op & 0xff;
-    return new CmpState(address, this, dst, immediate);
+    return new CmpState(address, this, src, immediate);
   }
 }

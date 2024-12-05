@@ -1,6 +1,10 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
+
+import java.util.Map;
+import java.util.Set;
 
 public class RorAluState extends OpState {
   public final Register dst;
@@ -25,6 +29,13 @@ public class RorAluState extends OpState {
   @Override
   public boolean negative() {
     return true;
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
+    usage.get(this.dst).add(RegisterUsage.READ);
+    usage.get(this.src).add(RegisterUsage.READ);
   }
 
   @Override

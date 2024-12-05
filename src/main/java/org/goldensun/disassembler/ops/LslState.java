@@ -8,6 +8,9 @@ import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
+import java.util.Map;
+import java.util.Set;
+
 public class LslState extends OpState {
   public final Register dst;
   public final Register src;
@@ -49,6 +52,12 @@ public class LslState extends OpState {
     } else {
       output.addLine(this, "%1$s = %2$s << %3$d;".formatted(this.dst.fullName(), this.src.fullName(), this.amount));
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
+    usage.get(this.src).add(RegisterUsage.READ);
   }
 
   @Override

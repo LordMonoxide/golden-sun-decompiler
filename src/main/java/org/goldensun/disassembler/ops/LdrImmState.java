@@ -7,6 +7,9 @@ import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
+import java.util.Map;
+import java.util.Set;
+
 public class LdrImmState extends OpState {
   public final Register dst;
   public final Register base;
@@ -29,6 +32,12 @@ public class LdrImmState extends OpState {
   @Override
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
     output.addLine(this, "%s = MEMORY.ref(4, %s + 0x%x).get();".formatted(this.dst.fullName(), this.base.fullName(), this.offset));
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
+    usage.get(this.base).add(RegisterUsage.READ);
   }
 
   @Override

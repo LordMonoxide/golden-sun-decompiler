@@ -1,8 +1,11 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
+import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
+import java.util.Map;
 import java.util.Set;
 
 public class ConditionalBranchState extends OpState {
@@ -48,6 +51,11 @@ public class ConditionalBranchState extends OpState {
       .replace("Z", "CPU.cpsr().getZero()")
       .replace("N", "CPU.cpsr().getNegative()")
       ;
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+
   }
 
   public int getDest() {

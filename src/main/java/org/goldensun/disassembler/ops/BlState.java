@@ -1,10 +1,15 @@
 package org.goldensun.disassembler.ops;
 
+import org.goldensun.FunctionInfo;
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class BlState extends OpState {
   public final int offset;
@@ -31,8 +36,27 @@ public class BlState extends OpState {
 //      output.addLabel(this.getDest(), "//LAB_%07x".formatted(this.getDest()));
 //      output.addLine(this, "LAB_%07x;".formatted(this.getDest()));
 //    } else {
-      output.addLine(this, "%s = FUN_%07x();".formatted(Register.R0.fullName(), this.getDest()));
+    final FunctionInfo destInfo = config.functions.get(this.getDest());
+    final String destName;
+    final String returnType;
+    final String args;
+    if(destInfo != null) {
+      destName = destInfo.name;
+      returnType = destInfo.returnType;
+      args = IntStream.range(0, destInfo.params.length).mapToObj(i -> (i < 4 ? "r" : "a") + i).collect(Collectors.joining(", "));
+    } else {
+      destName = "FUN_%07x".formatted(this.getDest());
+      returnType = "";
+      args = "";
+    }
+
+    output.addLine(this, "%s%s(%s);".formatted("void".equals(returnType) ? "" : Register.R0.fullName() + " = ", destName, args));
 //    }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+
   }
 
   public int getDest() {

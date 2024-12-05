@@ -2,7 +2,11 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
+
+import java.util.Map;
+import java.util.Set;
 
 public class StrbRegState extends OpState {
   public final Register src;
@@ -19,6 +23,13 @@ public class StrbRegState extends OpState {
   @Override
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
     output.addLine(this, "MEMORY.ref(1, %s + %s).setu(%s);".formatted(this.base.fullName(), this.offset.fullName(), this.src.fullName()));
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.src).add(RegisterUsage.READ);
+    usage.get(this.base).add(RegisterUsage.READ);
+    usage.get(this.offset).add(RegisterUsage.READ);
   }
 
   @Override

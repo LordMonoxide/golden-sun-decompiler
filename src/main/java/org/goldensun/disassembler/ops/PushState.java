@@ -8,6 +8,8 @@ import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PushState extends OpState {
@@ -32,6 +34,11 @@ public class PushState extends OpState {
     for(final Register register : this.registers) {
       output.addLine(this, "CPU.push(%s);".formatted(register.fullName()));
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+
   }
 
   @Override

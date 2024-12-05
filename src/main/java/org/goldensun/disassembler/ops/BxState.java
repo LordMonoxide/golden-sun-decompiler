@@ -4,8 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
+import java.util.Map;
 import java.util.Set;
 
 public class BxState extends OpState {
@@ -32,6 +34,11 @@ public class BxState extends OpState {
     } else {
       output.addLine(this, "%s = MEMORY.call(%s);".formatted(Register.R0.fullName(), this.dst.fullName()));
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
   }
 
   @Override

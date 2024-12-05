@@ -2,9 +2,12 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PopState extends OpState {
@@ -20,6 +23,11 @@ public class PopState extends OpState {
     for(final Register r : this.registers) {
       output.addLine(this, "%s = CPU.pop();".formatted(r.fullName()));
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+
   }
 
   @Override

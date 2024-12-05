@@ -7,6 +7,9 @@ import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
+import java.util.Map;
+import java.util.Set;
+
 public class MovState extends OpState {
   public final Register dst;
   public final int imm;
@@ -40,6 +43,11 @@ public class MovState extends OpState {
     } else {
       output.addLine(this, "%1$s = 0x%2$x;".formatted(this.dst.fullName(), this.imm));
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
   }
 
   @Override

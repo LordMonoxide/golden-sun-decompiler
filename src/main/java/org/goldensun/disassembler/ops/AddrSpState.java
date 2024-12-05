@@ -7,6 +7,9 @@ import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
 import org.goldensun.disassembler.values.Value;
 
+import java.util.Map;
+import java.util.Set;
+
 public class AddrSpState extends OpState {
   public final Register dst;
   public final int offset;
@@ -26,6 +29,11 @@ public class AddrSpState extends OpState {
   @Override
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
     output.addLine(this, "%s = %s + 0x%x;".formatted(this.dst.fullName(), Register.R13_SP.fullName(), this.offset));
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
   }
 
   @Override

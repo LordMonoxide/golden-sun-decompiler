@@ -2,7 +2,11 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
+
+import java.util.Map;
+import java.util.Set;
 
 public class LsrState extends OpState {
   public final Register dst;
@@ -38,6 +42,12 @@ public class LsrState extends OpState {
     } else {
       output.addLine(this, "%1$s = %2$s >>> %3$d;".formatted(this.dst.fullName(), this.src.fullName(), this.amount));
     }
+  }
+
+  @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
+    usage.get(this.src).add(RegisterUsage.READ);
   }
 
   @Override
