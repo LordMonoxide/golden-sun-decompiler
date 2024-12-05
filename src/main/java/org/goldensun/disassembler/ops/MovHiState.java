@@ -36,11 +36,11 @@ public class MovHiState extends OpState {
   public void getReferents(final DisassemblerConfig config, final Set<Integer> referents) {
     if(this.dst == Register.R15_PC) {
       for(final SwitchConfig switchConfig : config.switches) {
-        if(this.range.baseAddr + this.address + 0x2 == switchConfig.address) {
+        if(this.address + 0x2 == switchConfig.address) {
           LOGGER.info("Binding %s to switch 0x%x", this, switchConfig.address);
 
           for(int i = 0; i < switchConfig.entryCount; i++) {
-            referents.add(config.read(switchConfig.address - this.range.baseAddr + i * 0x4, 4) - this.range.baseAddr);
+            referents.add(config.memory.get(switchConfig.address + i * 0x4, 4));
           }
         }
       }
@@ -55,7 +55,7 @@ public class MovHiState extends OpState {
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
     final String srcValue;
     if(this.src == Register.R15_PC) {
-      srcValue = "0x%07x".formatted(this.range.baseAddr + this.address + 0x4);
+      srcValue = "0x%07x".formatted(this.address + 0x4);
     } else {
       srcValue = "%s".formatted(this.src.fullName());
     }
@@ -65,13 +65,13 @@ public class MovHiState extends OpState {
     } else if(this.src == Register.R14_LR) {
       output.addLine(this, "return %s;".formatted(Register.R0.fullName()));
     } else {
-      output.addLabel(this.address, "//TODO PC SET 0x%x".formatted(this.range.baseAddr + this.address));
+      output.addLabel(this.address, "//TODO PC SET 0x%x".formatted(this.address));
       output.addLine(this, "%s = %s;".formatted(this.dst.fullName(), srcValue));
 
       for(final SwitchConfig switchConfig : config.switches) {
-        if(this.range.baseAddr + this.address + 0x2 == switchConfig.address) {
+        if(this.address + 0x2 == switchConfig.address) {
           for(int i = 0; i < switchConfig.entryCount; i++) {
-            final int destAddr = config.read(switchConfig.address - this.range.baseAddr + i * 0x4, 4) - this.range.baseAddr;
+            final int destAddr = config.memory.get(switchConfig.address + i * 0x4, 4);
             output.addLabel(destAddr, "//case %d: // switch %07x".formatted(i, switchConfig.address));
             output.addLabel(destAddr, "//LAB_%07x".formatted(destAddr));
           }

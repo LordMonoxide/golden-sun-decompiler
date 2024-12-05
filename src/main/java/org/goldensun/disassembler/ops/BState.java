@@ -25,10 +25,10 @@ public class BState extends OpState {
   @Override
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
     if(config.codeContains(this.getDest())) {
-      output.addLabel(this.getDest(), "//LAB_%07x".formatted(this.range.baseAddr + this.getDest()));
-      output.addLine(this, "LAB_%07x;".formatted(this.range.baseAddr + this.getDest()));
+      output.addLabel(this.getDest(), "//LAB_%07x".formatted(this.getDest()));
+      output.addLine(this, "LAB_%07x;".formatted(this.getDest()));
     } else {
-      output.addLine(this, "%s = FUN_%07x(); //TODO branch".formatted(Register.R0.fullName(), this.range.baseAddr + this.getDest()));
+      output.addLine(this, "%s = FUN_%07x(); //TODO branch".formatted(Register.R0.fullName(), this.getDest()));
     }
   }
 

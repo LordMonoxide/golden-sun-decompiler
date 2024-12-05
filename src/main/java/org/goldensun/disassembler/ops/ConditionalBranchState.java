@@ -33,11 +33,11 @@ public class ConditionalBranchState extends OpState {
     output.addLine(this, "if(" + this.replaceConditions() + ") { // " + this.hint);
 
     if(config.codeContains(this.getDest())) {
-      output.addLabel(this.getDest(), "//LAB_%07x".formatted(this.range.baseAddr + this.getDest()));
-      output.addLine(this, "  LAB_%07x;".formatted(this.range.baseAddr + this.getDest()));
+      output.addLabel(this.getDest(), "//LAB_%07x".formatted(this.getDest()));
+      output.addLine(this, "  LAB_%07x;".formatted(this.getDest()));
     } else {
       output.addLabel(this.address, "//TODO branch");
-      output.addLine(this, "  %s = FUN_%07x();".formatted(Register.R0.fullName(), this.range.baseAddr + this.getDest()));
+      output.addLine(this, "  %s = FUN_%07x();".formatted(Register.R0.fullName(), this.getDest()));
     }
 
     output.addLine(this, "}");

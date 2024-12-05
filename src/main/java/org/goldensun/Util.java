@@ -25,4 +25,10 @@ public final class Util {
 
     return value;
   }
+
+  public static void set(final byte[] data, final int offset, final int size, final int value) {
+    for(int i = 0; i < size; i++) {
+      data[offset + i] = (byte)(value >>> i * 8 & 0xff);
+    }
+  }
 }

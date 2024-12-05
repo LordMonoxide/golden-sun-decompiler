@@ -1,6 +1,7 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblyRange;
+import org.goldensun.memory.Memory;
 
 public final class OpTypes {
   private OpTypes() { }
@@ -8,7 +9,7 @@ public final class OpTypes {
   // THUMB1 (shifted register)
   public static final OpType LSL = new Lsl();
   public static final OpType LSR = new Lsr();
-  public static final OpType ASR = new OpType("ASR");
+  public static final OpType ASR = new Asr();
   private static final OpType[] THUMB1 = {LSL, LSR, ASR};
 
   // THUMB2 (add/sub)
@@ -65,7 +66,7 @@ public final class OpTypes {
   public static final OpType STRH_REG = new StrhReg();
   public static final OpType LDSB_REG = new LdsbReg();
   public static final OpType LDRH_REG = new LdrhReg();
-  public static final OpType LDSH_REG = new OpType("LDSH_REG");
+  public static final OpType LDSH_REG = new LdshReg();
   private static final OpType[] THUMB8 = {STRH_REG, LDSB_REG, LDRH_REG, LDSH_REG};
 
   // THUMB9 (load/store with immediate offset)
@@ -133,8 +134,8 @@ public final class OpTypes {
   public static final OpType BLX = new Bl("BLX");
   private static final OpType[] THUMB19 = {BL, BLX};
 
-  public static OpState parse(final DisassemblyRange range, final byte[] data, final int offset) {
-    final int op = (data[offset + 1] & 0xff) << 8 | data[offset] & 0xff;
+  public static OpState parse(final DisassemblyRange range, final Memory memory, final int offset) {
+    final int op = memory.get(offset, 2);
 
     // THUMB2 (must be first)
     if((op & 0xf800) == 0x1800) {
@@ -227,10 +228,10 @@ public final class OpTypes {
 
     // THUMB19
     if((op & 0xf000) == 0xf000) {
-      final int op2 = (data[offset + 3] & 0xff) << 8 | data[offset + 2] & 0xff;
+      final int op2 = memory.get(offset + 2, 2);
       return THUMB19[1 - (op2 >>> 12 & 0x1)].parse(range, offset, op2 << 16 | op);
     }
 
-    throw new RuntimeException("Unknown op 0x%x".formatted(op));
+    throw new RuntimeException("Unknown op 0x%x @ 0x%x".formatted(op, offset));
   }
 }

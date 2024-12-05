@@ -2,17 +2,17 @@ package org.goldensun;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.goldensun.disassembler.DataRange;
 import org.goldensun.disassembler.Disassembler;
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.FlowControl;
 import org.goldensun.disassembler.InstructionSet;
 import org.goldensun.disassembler.ReferenceGraph;
-import org.goldensun.disassembler.SwitchConfig;
 import org.goldensun.disassembler.Tracer;
 import org.goldensun.disassembler.Translator;
 import org.goldensun.disassembler.ops.OpState;
+import org.goldensun.memory.Memory;
+import org.goldensun.memory.Segment;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.goldensun.Decompressor.decompress;
 
 public final class Main {
   private Main() { }
@@ -34,12 +36,19 @@ public final class Main {
   private static final Logger LOGGER = LogManager.getFormatterLogger(Main.class);
 
   public static void main(final String[] args) throws IOException {
-    final DisassemblerConfig config = new DisassemblerConfig();
-    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a3ef0, 0x80a3f42));
-    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x80a3f6c, 0x80a4096));
-    config.dataRanges.add(new DataRange(0x8000000, 0x80a3ef0, 0x80a40a8));
-    config.switches.add(new SwitchConfig(0x80a3f44, 10));
-    config.data = Files.readAllBytes(Path.of("./game.rom"));
+    final Memory memory = new Memory();
+    memory.addSegment(new Segment(0x200_0000, 0x4_0000)); // On-board work RAM
+    memory.addSegment(new Segment(0x300_0000, 0x8000, 0xf00_7fff)); // On-chip work RAM
+    memory.addSegment(new Segment(0x800_0000, 0x80_0000)); // Game memory
+    memory.setBytes(0x800_0000, Files.readAllBytes(Path.of("./game.rom")));
+
+    final DisassemblerConfig config = new DisassemblerConfig(memory);
+
+    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x801e74c, 0x801e79c));
+//    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x801e7ac, 0x801e7bc));
+//    config.switches.add(new SwitchConfig(0x80a4380, 6));
+
+//    decompressMap(config, 3);
 
     LOGGER.info("Disassembling code...");
 
@@ -77,5 +86,19 @@ public final class Main {
 
     final Translator translator = new Translator();
     translator.translate(config, ops, conditionDependencies);
+  }
+
+  private static void decompressMap(final DisassemblerConfig config, final int mapId) {
+    final int pointerTableIndex = config.memory.get(0x809f1a8 + mapId * 0x8, 0x2);
+    final int mapPtr = config.memory.get(0x8320000 + pointerTableIndex * 0x4, 0x4);
+    final int decompressedSize = decompress(config.memory, mapPtr, 0x2008000);
+    LOGGER.info("Decompressed map %d to 0x2008000 (0x%x bytes)", mapId, decompressedSize);
+
+    final int initPtr = config.memory.get(0x2008004, 0x4);
+    final int roomsPtr = config.memory.get(0x200800c, 0x4);
+    final int transitionsPtr = config.memory.get(0x2008014, 0x4);
+    final int actorsPtr = config.memory.get(0x200801c, 0x4);
+    final int eventsPtr = config.memory.get(0x2008024, 0x4);
+    final int laddersPtr = config.memory.get(0x200802c, 0x4);
   }
 }

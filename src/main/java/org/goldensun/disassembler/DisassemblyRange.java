@@ -9,8 +9,8 @@ public class DisassemblyRange {
   public DisassemblyRange(final InstructionSet instructionSet, final int baseAddr, final int start, final int end) {
     this.instructionSet = instructionSet;
     this.baseAddr = baseAddr;
-    this.start = start - baseAddr;
-    this.end = end - baseAddr;
+    this.start = start;
+    this.end = end;
   }
 
   public boolean contains(final int address) {
