@@ -1,8 +1,6 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
-import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.TranslatorOutput;
 
 import java.util.Set;
@@ -12,8 +10,8 @@ public class ConditionalBranchState extends OpState {
   private final String hint;
   public final int offset;
 
-  public ConditionalBranchState(final DisassemblyRange range, final int address, final OpType opType, final String condition, final String hint, final int offset) {
-    super(range, address, opType);
+  public ConditionalBranchState(final int address, final OpType opType, final String condition, final String hint, final int offset) {
+    super(address, opType);
     this.condition = condition;
     this.hint = hint;
     this.offset = offset;
@@ -23,22 +21,22 @@ public class ConditionalBranchState extends OpState {
   public void getReferents(final DisassemblerConfig config, final Set<Integer> referents) {
     super.getReferents(config, referents);
 
-    if(config.codeContains(this.getDest())) {
+//    if(config.codeContains(this.getDest())) {
       referents.add(this.getDest());
-    }
+//    }
   }
 
   @Override
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
     output.addLine(this, "if(" + this.replaceConditions() + ") { // " + this.hint);
 
-    if(config.codeContains(this.getDest())) {
+//    if(config.codeContains(this.getDest())) {
       output.addLabel(this.getDest(), "//LAB_%07x".formatted(this.getDest()));
       output.addLine(this, "  LAB_%07x;".formatted(this.getDest()));
-    } else {
-      output.addLabel(this.address, "//TODO branch");
-      output.addLine(this, "  %s = FUN_%07x();".formatted(Register.R0.fullName(), this.getDest()));
-    }
+//    } else {
+//      output.addLabel(this.address, "//TODO branch");
+//      output.addLine(this, "  %s = FUN_%07x();".formatted(Register.R0.fullName(), this.getDest()));
+//    }
 
     output.addLine(this, "}");
   }

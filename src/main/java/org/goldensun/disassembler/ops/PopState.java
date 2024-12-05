@@ -1,7 +1,6 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.TranslatorOutput;
 
@@ -11,8 +10,8 @@ import java.util.stream.Collectors;
 public class PopState extends OpState {
   public final Register[] registers;
 
-  public PopState(final DisassemblyRange range, final int address, final OpType opType, final Register[] registers) {
-    super(range, address, opType);
+  public PopState(final int address, final OpType opType, final Register[] registers) {
+    super(address, opType);
     this.registers = registers;
   }
 

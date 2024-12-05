@@ -2,7 +2,6 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
@@ -13,8 +12,8 @@ public class LdrbImmState extends OpState {
   public final Register base;
   public final int offset;
 
-  public LdrbImmState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final Register base, final int offset) {
-    super(range, address, opType);
+  public LdrbImmState(final int address, final OpType opType, final Register dst, final Register base, final int offset) {
+    super(address, opType);
     this.dst = dst;
     this.base = base;
     this.offset = offset;

@@ -2,18 +2,15 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.TranslatorOutput;
 
 import java.util.Set;
 
 public class OpState {
-  public final DisassemblyRange range;
   public final int address;
   public final OpType opType;
 
-  public OpState(final DisassemblyRange range, final int address, final OpType opType) {
-    this.range = range;
+  public OpState(final int address, final OpType opType) {
     this.address = address;
     this.opType = opType;
   }

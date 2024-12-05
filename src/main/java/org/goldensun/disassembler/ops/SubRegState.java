@@ -1,7 +1,6 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.TranslatorOutput;
 
@@ -10,8 +9,8 @@ public class SubRegState extends OpState {
   public final Register src;
   public final Register operand;
 
-  public SubRegState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final Register src, final Register operand) {
-    super(range, address, opType);
+  public SubRegState(final int address, final OpType opType, final Register dst, final Register src, final Register operand) {
+    super(address, opType);
     this.dst = dst;
     this.src = src;
     this.operand = operand;

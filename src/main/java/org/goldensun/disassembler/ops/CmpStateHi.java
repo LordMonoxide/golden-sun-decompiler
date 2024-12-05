@@ -1,7 +1,6 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.TranslatorOutput;
 
@@ -9,8 +8,8 @@ public class CmpStateHi extends OpState {
   public final Register a;
   public final Register b;
 
-  public CmpStateHi(final DisassemblyRange range, final int address, final OpType opType, final Register a, final Register b) {
-    super(range, address, opType);
+  public CmpStateHi(final int address, final OpType opType, final Register a, final Register b) {
+    super(address, opType);
     this.a = a;
     this.b = b;
   }

@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.SwitchConfig;
@@ -19,8 +18,8 @@ public class MovHiState extends OpState {
   public final Register dst;
   public final Register src;
 
-  public MovHiState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final Register src) {
-    super(range, address, opType);
+  public MovHiState(final int address, final OpType opType, final Register dst, final Register src) {
+    super(address, opType);
     this.dst = dst;
     this.src = src;
   }

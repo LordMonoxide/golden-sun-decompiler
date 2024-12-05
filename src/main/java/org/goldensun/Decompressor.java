@@ -295,4 +295,33 @@ public final class Decompressor {
       } while(r5 != 0);
     }
   }
+
+  /** This seems to rewrite function pointers in decompressed THUMB code */
+  public static void rewritePointers(final Memory memory, int r0, int r1) {
+    r1 = r1 + r1;
+    final int r2 = r0 + r1;
+    r0 = r0 + 0x2;
+    final int r6 = r0;
+
+    //LAB_300201c
+    while(r0 < r2) {
+      int r12 = memory.get(r0, 2);
+      r0 = r0 + 0x2;
+      if(r12 >>> 11 == 0x1f) {
+        int r3 = memory.get(r0 - 0x4, 2);
+        if(r3 >>> 11 == 0x1e) {
+          r12 = r12 & ~0xf800 | (r3 & ~0xf800) << 11;
+          r12 = r12 << 1;
+          r12 = r12 - (r0 - r6);
+          r3 = r12 >>> 12 & ~0xf800 | 0xf000;
+          r12 = r12 >>> 1;
+          r12 = r12 | 0xf800;
+          memory.set(r0 - 0x4, 2, r3);
+          memory.set(r0 - 0x2, 2, r12);
+        }
+      }
+    }
+
+    //LAB_3002074
+  }
 }

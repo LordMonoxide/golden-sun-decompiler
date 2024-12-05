@@ -40,6 +40,18 @@ public class Segment {
     Util.set(this.data, offset, size, value);
   }
 
+  public byte[] getBytes(final int offset, final int size) {
+    final byte[] data = new byte[size];
+    System.arraycopy(this.data, offset & this.mask, data, 0, size);
+    return data;
+  }
+
+  public void getBytes(int offset, final byte[] dest, int dataOffset, final int dataSize) {
+    offset &= this.mask;
+    dataOffset &= this.mask;
+    System.arraycopy(this.data, offset, dest, dataOffset, dataSize);
+  }
+
   public void setBytes(int offset, final byte[] data, int dataOffset, final int dataLength) {
     offset &= this.mask;
     dataOffset &= this.mask;

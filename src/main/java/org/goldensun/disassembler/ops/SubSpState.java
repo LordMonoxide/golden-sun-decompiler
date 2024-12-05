@@ -2,15 +2,14 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.TranslatorOutput;
 
 public class SubSpState extends OpState {
   public final int amount;
 
-  public SubSpState(final DisassemblyRange range, final int address, final OpType opType, final int amount) {
-    super(range, address, opType);
+  public SubSpState(final int address, final OpType opType, final int amount) {
+    super(address, opType);
     this.amount = amount;
   }
 

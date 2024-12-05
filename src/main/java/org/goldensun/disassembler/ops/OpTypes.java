@@ -1,6 +1,5 @@
 package org.goldensun.disassembler.ops;
 
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.memory.Memory;
 
 public final class OpTypes {
@@ -56,7 +55,7 @@ public final class OpTypes {
   public static final OpType LDRPC = new LdrPc();
 
   // THUMB7 (load/store with register offset)
-  public static final OpType STR_REG = new OpType("STR_REG");
+  public static final OpType STR_REG = new StrReg();
   public static final OpType STRB_REG = new StrbReg();
   public static final OpType LDR_REG = new LdrReg();
   public static final OpType LDRB_REG = new LdrbReg();
@@ -134,102 +133,102 @@ public final class OpTypes {
   public static final OpType BLX = new Bl("BLX");
   private static final OpType[] THUMB19 = {BL, BLX};
 
-  public static OpState parse(final DisassemblyRange range, final Memory memory, final int offset) {
+  public static OpState parse(final Memory memory, final int offset) {
     final int op = memory.get(offset, 2);
 
     // THUMB2 (must be first)
     if((op & 0xf800) == 0x1800) {
-      return THUMB2[op >>> 9 & 0x3].parse(range, offset, op);
+      return THUMB2[op >>> 9 & 0x3].parse(offset, op);
     }
 
     // THUMB1
     if((op & 0xe000) == 0x0) {
-      return THUMB1[op >>> 11 & 0x3].parse(range, offset, op);
+      return THUMB1[op >>> 11 & 0x3].parse(offset, op);
     }
 
     // THUMB3
     if((op & 0xe000) == 0x2000) {
-      return THUMB3[op >>> 11 & 0x3].parse(range, offset, op);
+      return THUMB3[op >>> 11 & 0x3].parse(offset, op);
     }
 
     // THUMB4
     if((op & 0xfc00) == 0x4000) {
-      return THUMB4[op >>> 6 & 0xf].parse(range, offset, op);
+      return THUMB4[op >>> 6 & 0xf].parse(offset, op);
     }
 
     // THUMB5
     if((op & 0xfc00) == 0x4400) {
-      return THUMB5[op >>> 8 & 0x3].parse(range, offset, op);
+      return THUMB5[op >>> 8 & 0x3].parse(offset, op);
     }
 
     // THUMB6
     if((op & 0xf800) == 0x4800) {
-      return LDRPC.parse(range, offset, op);
+      return LDRPC.parse(offset, op);
     }
 
     // THUMB7/8
     if((op & 0xf000) == 0x5000) {
       if((op & 0x200) == 0) {
-        return THUMB7[op >>> 10 & 0x3].parse(range, offset, op);
+        return THUMB7[op >>> 10 & 0x3].parse(offset, op);
       }
 
-      return THUMB8[op >>> 10 & 0x3].parse(range, offset, op);
+      return THUMB8[op >>> 10 & 0x3].parse(offset, op);
     }
 
     // THUMB9
     if((op & 0xe000) == 0x6000) {
-      return THUMB9[op >>> 11 & 0x3].parse(range, offset, op);
+      return THUMB9[op >>> 11 & 0x3].parse(offset, op);
     }
 
     // THUMB10
     if((op & 0xf000) == 0x8000) {
-      return THUMB10[op >>> 11 & 0x1].parse(range, offset, op);
+      return THUMB10[op >>> 11 & 0x1].parse(offset, op);
     }
 
     // THUMB11
     if((op & 0xf000) == 0x9000) {
-      return THUMB11[op >>> 11 & 0x1].parse(range, offset, op);
+      return THUMB11[op >>> 11 & 0x1].parse(offset, op);
     }
 
     // THUMB12
     if((op & 0xf000) == 0xa000) {
-      return THUMB12[op >>> 11 & 0x1].parse(range, offset, op);
+      return THUMB12[op >>> 11 & 0x1].parse(offset, op);
     }
 
     // THUMB13
     if((op & 0xff00) == 0xb000) {
-      return THUMB13[op >>> 7 & 0x1].parse(range, offset, op);
+      return THUMB13[op >>> 7 & 0x1].parse(offset, op);
     }
 
     // THUMB14
     if((op & 0xf600) == 0xb400) {
-      return THUMB14[op >>> 11 & 0x1].parse(range, offset, op);
+      return THUMB14[op >>> 11 & 0x1].parse(offset, op);
     }
 
     // THUMB15
     if((op & 0xf000) == 0xc000) {
-      return THUMB15[op >>> 11 & 0x1].parse(range, offset, op);
+      return THUMB15[op >>> 11 & 0x1].parse(offset, op);
     }
 
     // THUMB17
     if((op & 0xff00) == 0xdf00) {
-      return SWI.parse(range, offset, op);
+      return SWI.parse(offset, op);
     }
 
     // THUMB16
     if((op & 0xf000) == 0xd000) {
-      return THUMB16[op >>> 8 & 0xf].parse(range, offset, op);
+      return THUMB16[op >>> 8 & 0xf].parse(offset, op);
     }
 
     // THUMB18
     if((op & 0xf800) == 0xe000) {
-      return B.parse(range, offset, op);
+      return B.parse(offset, op);
     }
 
     // THUMB19
     if((op & 0xf000) == 0xf000) {
       final int op2 = memory.get(offset + 2, 2);
-      return THUMB19[1 - (op2 >>> 12 & 0x1)].parse(range, offset, op2 << 16 | op);
+      return THUMB19[1 - (op2 >>> 12 & 0x1)].parse(offset, op2 << 16 | op);
     }
 
     throw new RuntimeException("Unknown op 0x%x @ 0x%x".formatted(op, offset));

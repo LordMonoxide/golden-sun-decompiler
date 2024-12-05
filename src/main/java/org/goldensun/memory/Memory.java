@@ -36,6 +36,16 @@ public class Memory {
     segment.set(addr, size, data);
   }
 
+  public byte[] getBytes(final int address, final int size) {
+    final Segment segment = this.getSegment(address);
+    return segment.getBytes(address - segment.getAddress(), size);
+  }
+
+  public void getBytes(final int address, final byte[] dest, final int offset, final int size) {
+    final Segment segment = this.getSegment(address);
+    segment.getBytes(address - segment.getAddress(), dest, offset, size);
+  }
+
   public void setBytes(final int address, final byte[] data) {
     this.setBytes(address, data, 0, data.length);
   }

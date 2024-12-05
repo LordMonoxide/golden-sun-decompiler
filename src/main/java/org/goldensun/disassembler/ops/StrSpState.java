@@ -2,7 +2,6 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
@@ -12,8 +11,8 @@ public class StrSpState extends OpState {
   public final Register src;
   public final int offset;
 
-  public StrSpState(final DisassemblyRange range, final int address, final OpType opType, final Register src, final int offset) {
-    super(range, address, opType);
+  public StrSpState(final int address, final OpType opType, final Register src, final int offset) {
+    super(address, opType);
     this.src = src;
     this.offset = offset;
   }

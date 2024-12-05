@@ -1,7 +1,6 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.TranslatorOutput;
 
@@ -9,8 +8,8 @@ public class LdrSpState extends OpState {
   public final Register dst;
   public final int offset;
 
-  public LdrSpState(final DisassemblyRange range, final int address, final OpType opType, final Register dst, final int offset) {
-    super(range, address, opType);
+  public LdrSpState(final int address, final OpType opType, final Register dst, final int offset) {
+    super(address, opType);
     this.dst = dst;
     this.offset = offset;
   }

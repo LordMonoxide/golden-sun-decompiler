@@ -1,7 +1,5 @@
 package org.goldensun.disassembler.ops;
 
-import org.goldensun.disassembler.DisassemblyRange;
-
 import static org.goldensun.Util.sign;
 
 public class ConditionalBranch extends OpType {
@@ -43,8 +41,8 @@ public class ConditionalBranch extends OpType {
   }
 
   @Override
-  public OpState parse(final DisassemblyRange range, final int address, final int op) {
+  public OpState parse(final int address, final int op) {
     final int offset = sign(op & 0xff, 8) * 0x2;
-    return new ConditionalBranchState(range, address, this, this.condition, this.hint, offset);
+    return new ConditionalBranchState(address, this, this.condition, this.hint, offset);
   }
 }

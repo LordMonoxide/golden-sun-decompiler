@@ -3,7 +3,6 @@ package org.goldensun.disassembler.ops;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.TranslatorOutput;
 
@@ -14,8 +13,8 @@ public class BxState extends OpState {
 
   public final Register dst;
 
-  public BxState(final DisassemblyRange range, final int address, final OpType opType, final Register dst) {
-    super(range, address, opType);
+  public BxState(final int address, final OpType opType, final Register dst) {
+    super(address, opType);
     this.dst = dst;
   }
 

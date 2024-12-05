@@ -1,7 +1,6 @@
 package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.TranslatorOutput;
 
@@ -12,8 +11,8 @@ public class StmiaState extends OpState {
   public final Register[] registers;
   public final Register base;
 
-  public StmiaState(final DisassemblyRange range, final int address, final OpType opType, final Register[] registers, final Register base) {
-    super(range, address, opType);
+  public StmiaState(final int address, final OpType opType, final Register[] registers, final Register base) {
+    super(address, opType);
     this.registers = registers;
     this.base = base;
   }

@@ -2,7 +2,6 @@ package org.goldensun.disassembler.ops;
 
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.TranslatorOutput;
@@ -14,8 +13,8 @@ import java.util.stream.Collectors;
 public class PushState extends OpState {
   public final Register[] registers;
 
-  public PushState(final DisassemblyRange range, final int address, final OpType opType, final Register[] registers) {
-    super(range, address, opType);
+  public PushState(final int address, final OpType opType, final Register[] registers) {
+    super(address, opType);
     this.registers = registers;
   }
 
