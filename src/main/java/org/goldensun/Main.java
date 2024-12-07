@@ -5,9 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.goldensun.disassembler.Disassembler;
 import org.goldensun.disassembler.DisassemblerConfig;
-import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.FlowControl;
-import org.goldensun.disassembler.InstructionSet;
 import org.goldensun.disassembler.ReferenceGraph;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
@@ -200,7 +198,7 @@ public final class Main {
     LOGGER.info("Disassembling function 0x%07x", address);
 
     final DisassemblerConfig newConfig = new DisassemblerConfig(config);
-    newConfig.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, address, address));
+    newConfig.address = address;
     final Map<Integer, OpState> disassembly = disassemble(newConfig);
     deferred.put(address, disassembly);
     return disassembly;

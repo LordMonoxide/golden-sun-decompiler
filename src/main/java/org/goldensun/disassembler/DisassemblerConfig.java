@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public class DisassemblerConfig {
-  public final List<DisassemblyRange> disassemblyRanges = new ArrayList<>();
   public final List<SwitchConfig> switches = new ArrayList<>();
   public final Map<Integer, FunctionInfo> functions;
   /** Overrides for decompiled function names */
@@ -19,6 +18,8 @@ public class DisassemblerConfig {
 
   public final Memory memory;
   public final PrintWriter writer;
+
+  public int address;
 
   private DisassemblerConfig(final Memory memory, final PrintWriter writer, final Map<Integer, FunctionInfo> functions, final Map<Integer, String> functionNameOverrides, final Map<Integer, List<String>> docs) {
     this.memory = memory;
