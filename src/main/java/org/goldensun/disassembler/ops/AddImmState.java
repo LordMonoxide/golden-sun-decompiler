@@ -52,7 +52,6 @@ public class AddImmState extends OpState {
   @Override
   public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
     usage.get(this.dst).add(RegisterUsage.WRITE);
-    usage.get(this.dst).add(RegisterUsage.READ);
     usage.get(this.src).add(RegisterUsage.READ);
   }
 

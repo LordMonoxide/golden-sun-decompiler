@@ -27,7 +27,14 @@ public class PopState extends OpState {
 
   @Override
   public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    for(final Register register : this.registers) {
+      usage.get(register).add(RegisterUsage.WRITE);
+    }
+  }
 
+  @Override
+  public int getStackDepthChange() {
+    return -this.registers.length * 0x4;
   }
 
   @Override

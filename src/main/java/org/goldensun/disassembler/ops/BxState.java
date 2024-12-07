@@ -38,7 +38,7 @@ public class BxState extends OpState {
 
   @Override
   public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
-    usage.get(this.dst).add(RegisterUsage.WRITE);
+    usage.get(this.dst).add(RegisterUsage.READ);
   }
 
   @Override

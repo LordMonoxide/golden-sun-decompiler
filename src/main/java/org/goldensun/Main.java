@@ -9,12 +9,17 @@ import org.goldensun.disassembler.DisassemblyRange;
 import org.goldensun.disassembler.FlowControl;
 import org.goldensun.disassembler.InstructionSet;
 import org.goldensun.disassembler.ReferenceGraph;
+import org.goldensun.disassembler.Register;
+import org.goldensun.disassembler.RegisterUsage;
 import org.goldensun.disassembler.Tracer;
 import org.goldensun.disassembler.Translator;
 import org.goldensun.disassembler.ops.BlState;
+import org.goldensun.disassembler.ops.BxState;
 import org.goldensun.disassembler.ops.LdrPcState;
 import org.goldensun.disassembler.ops.OpState;
 import org.goldensun.disassembler.ops.OpTypes;
+import org.goldensun.disassembler.ops.PopState;
+import org.goldensun.disassembler.ops.PushState;
 import org.goldensun.memory.Memory;
 import org.goldensun.memory.Segment;
 
@@ -25,9 +30,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.goldensun.Decompressor.decompress;
@@ -118,7 +126,7 @@ public final class Main {
   private static void disassembleEventHandlers(final DisassemblerConfig config, final Map<Integer, String> functions, final Map<Integer, Map<Integer, OpState>> deferred, final Map<Integer, OpState> getEventsDisassembly) {
     for(final OpState op : getEventsDisassembly.values()) {
       if(op instanceof final LdrPcState ldrpc) {
-        final int eventList = config.memory.get(ldrpc.getAddress(), 0x4);
+        final int eventList = config.memory.get(ldrpc.getDest(), 0x4);
         if(eventList >= 0x2008000 && eventList < 0x3000000) {
           LOGGER.info("Disassembling event list 0x%x", eventList);
 
@@ -212,7 +220,122 @@ public final class Main {
     return tracer.trace(config, ops);
   }
 
+  private static void clearRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    for(final Register register : Register.values()) {
+      usage.computeIfAbsent(register, k -> EnumSet.noneOf(RegisterUsage.class)).clear();
+    }
+  }
+
+  private static void removeBxReturn(final ReferenceGraph references) {
+    final OpState last = references.last();
+
+    if(last instanceof final BxState bx && bx.dst == Register.R0) {
+      references.remove(bx);
+    }
+  }
+
   private static List<String> translate(final DisassemblerConfig config, final Map<Integer, OpState> ops, final ReferenceGraph references) {
+    // Remove the return bx
+    removeBxReturn(references);
+
+    // Build up the register usage graph
+    final Map<OpState, Map<Register, List<OpState>>> registerUsage = new HashMap<>();
+    final Map<Register, Set<RegisterUsage>> consumerUsage = new EnumMap<>(Register.class);
+    final Map<Register, Set<RegisterUsage>> providerUsage = new EnumMap<>(Register.class);
+    final Map<OpState, Integer> stackDepths = new HashMap<>();
+
+    // Backtrack from the terminal op
+    references.backtrack((consumer, consumerStackDepth) -> {
+      stackDepths.put(consumer, consumerStackDepth);
+
+      // Get each op's register usage
+      clearRegisterUsage(consumerUsage);
+      consumer.getRegisterUsage(consumerUsage);
+      registerUsage.put(consumer, new EnumMap<>(Register.class));
+
+      // For each register that is read by the current op...
+      for(final var use : consumerUsage.entrySet()) {
+        if(use.getValue().contains(RegisterUsage.READ)) {
+          final List<OpState> valueProviders = registerUsage.get(consumer).computeIfAbsent(use.getKey(), k -> new ArrayList<>());
+
+          // Backtrack from the current op until each branch has provided a value for that register
+          references.backtrack(consumer, (provider, providerStackDepth) -> {
+            clearRegisterUsage(providerUsage);
+            provider.getRegisterUsage(providerUsage);
+
+            // This op provides a value for the register we're looking for, record it and terminate this branch
+            if(providerUsage.get(use.getKey()).contains(RegisterUsage.WRITE)) {
+              valueProviders.add(provider);
+              return FlowControl.TERMINATE_BRANCH;
+            }
+
+            // Op does not provide a value for this register, continue backtracking on this branch
+            return FlowControl.CONTINUE;
+          });
+        }
+      }
+
+      return FlowControl.CONTINUE;
+    });
+
+    // Find matching push/pops and remove them if they're for r0-r7 or LR
+
+    // Find pushes
+    final Map<Register, PushState> registerPushes = new EnumMap<>(Register.class);
+    final Map<Integer, Register> registerPushDepths = new HashMap<>();
+    for(final var entry : stackDepths.entrySet()) {
+      if(entry.getKey() instanceof final PushState push) {
+        for(int i = 0; i < push.registers.length; i++) {
+          // All registers >= 8 will be copied to a low register, we ignore those
+          if(registerUsage.get(push).get(push.registers[i]).isEmpty()) {
+            registerPushes.put(push.registers[i], push);
+            registerPushDepths.put(entry.getValue() + i * 0x4, push.registers[i]);
+          }
+        }
+      }
+    }
+
+    // Find matching pops
+    final Map<PushState, Set<Register>> removeFromPush = new HashMap<>();
+    final Map<PopState, Set<Register>> removeFromPop = new HashMap<>();
+    for(final var entry : stackDepths.entrySet()) {
+      if(entry.getKey() instanceof final PopState pop) {
+        for(int i = 0; i < pop.registers.length; i++) {
+          final Register pushedRegister = registerPushDepths.get(entry.getValue() - 0x4 - i * 0x4);
+
+          if(pushedRegister != null) {
+            final Register poppedRegister = pop.registers[i];
+            removeFromPush.computeIfAbsent(registerPushes.get(pushedRegister), k -> EnumSet.noneOf(Register.class)).add(pushedRegister);
+            removeFromPop.computeIfAbsent(pop, k -> EnumSet.noneOf(Register.class)).add(poppedRegister);
+          }
+        }
+      }
+    }
+
+    // Remove registers from push ops
+    for(final var entry : removeFromPush.entrySet()) {
+      final PushState push = entry.getKey();
+
+      if(push.registers.length == entry.getValue().size()) {
+        // All registers were removed, remove op
+        references.remove(push);
+      } else {
+        references.put(new PushState(push.address, push.opType, Arrays.stream(push.registers).filter(register -> !entry.getValue().contains(register)).toArray(Register[]::new)), references.getReferences(push));
+      }
+    }
+
+    // Remove registers from pop ops
+    for(final var entry : removeFromPop.entrySet()) {
+      final PopState pop = entry.getKey();
+
+      if(pop.registers.length == entry.getValue().size()) {
+        // All registers were removed, remove op
+        references.remove(pop);
+      } else {
+        references.put(new PopState(pop.address, pop.opType, Arrays.stream(pop.registers).filter(register -> !entry.getValue().contains(register)).toArray(Register[]::new)), references.getReferences(pop));
+      }
+    }
+
     LOGGER.info("Tracking condition dependencies...");
 
     final OpState[] conditionalOps = references.stream().filter(op -> op.opType.readsConditions()).toArray(OpState[]::new);
@@ -220,7 +343,7 @@ public final class Main {
 
     for(final OpState conditionalOp : conditionalOps) {
       LOGGER.info("Searching for conditions for %s...", conditionalOp);
-      references.backtrack(conditionalOp, op -> {
+      references.backtrack(conditionalOp, (op, stackDepth) -> {
         if(conditionalOp.opType.readsOverflow() && !op.overflow() || conditionalOp.opType.readsCarry() && !op.carry() || conditionalOp.opType.readsZero() && !op.zero() || conditionalOp.opType.readsNegative() && !op.negative()) {
           return FlowControl.CONTINUE;
         }
@@ -234,8 +357,10 @@ public final class Main {
 
     Arrays.stream(conditionalOps).filter(op -> !conditionDependencies.containsKey(op)).forEach(failed -> LOGGER.warn("Failed to find condition for %s!", failed));
 
+    LOGGER.info("Generating output...");
+
     final Translator translator = new Translator();
-    return translator.translate(config, ops, conditionDependencies);
+    return translator.translate(config, references.ops(), conditionDependencies);
   }
 
   /** We defer translation of non-thunks to ensure all thunks are available in the function map before translating the rest of the disassembly */

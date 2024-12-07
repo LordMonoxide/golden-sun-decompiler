@@ -18,6 +18,10 @@ public abstract class OpState {
     this.opType = opType;
   }
 
+  public int getAddress() {
+    return this.address;
+  }
+
   public void run(final DisassemblerConfig config, final CpuState state) {
     throw new RuntimeException("0x%x: %s run not implemented".formatted(this.address, this.opType.name));
   }
@@ -31,6 +35,10 @@ public abstract class OpState {
   }
 
   public abstract void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage);
+
+  public int getStackDepthChange() {
+    return 0;
+  }
 
   public boolean overflow() {
     return false;

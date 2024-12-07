@@ -20,20 +20,20 @@ public class LdrPcState extends OpState {
     this.offset = offset;
   }
 
-  public int getAddress() {
+  public int getDest() {
     return this.address + 0x4 + this.offset * 0x4 & ~0x2;
   }
 
   @Override
   public void run(final DisassemblerConfig config, final CpuState state) {
-    final int address = this.getAddress();
+    final int address = this.getDest();
     state.registerUsage.get(this.dst).add(RegisterUsage.WRITE);
     state.registerValues.put(this.dst, Value.constant(config.memory.get(address, 4)));
   }
 
   @Override
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
-    output.addLine(this, "%s = 0x%x;".formatted(this.dst.fullName(), config.memory.get(this.getAddress(), 4)));
+    output.addLine(this, "%s = 0x%x;".formatted(this.dst.fullName(), config.memory.get(this.getDest(), 4)));
   }
 
   @Override
@@ -43,6 +43,6 @@ public class LdrPcState extends OpState {
 
   @Override
   public String toString() {
-    return "%s %s,[0x%x]".formatted(super.toString(), this.dst.name, this.getAddress());
+    return "%s %s,[0x%x]".formatted(super.toString(), this.dst.name, this.getDest());
   }
 }

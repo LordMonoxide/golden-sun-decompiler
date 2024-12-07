@@ -43,7 +43,7 @@ public class BlState extends OpState {
     if(destInfo != null) {
       destName = destInfo.name;
       returnType = destInfo.returnType;
-      args = IntStream.range(0, destInfo.params.length).mapToObj(i -> (i < 4 ? "r" : "a") + i).collect(Collectors.joining(", "));
+      args = IntStream.range(0, destInfo.params.length).mapToObj(i -> i < 4 ? "r" + i : "MEMORY.ref(4, CPU.sp().value + 0x%x).get()".formatted((i - 4) * 0x4)).collect(Collectors.joining(", "));
     } else {
       destName = "FUN_%07x".formatted(this.getDest());
       returnType = "";
@@ -56,7 +56,7 @@ public class BlState extends OpState {
 
   @Override
   public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
-
+    usage.get(Register.R0).add(RegisterUsage.WRITE);
   }
 
   public int getDest() {

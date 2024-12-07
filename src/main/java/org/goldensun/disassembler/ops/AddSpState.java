@@ -27,6 +27,11 @@ public class AddSpState extends OpState {
   }
 
   @Override
+  public int getStackDepthChange() {
+    return -this.amount;
+  }
+
+  @Override
   public String toString() {
     return "%s sp,0x%x".formatted(super.toString(), this.amount);
   }
