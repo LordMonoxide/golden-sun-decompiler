@@ -21,7 +21,7 @@ public class LdmiaState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     for(final Register register : this.registers) {
       output.addLine(this, "%s = MEMORY.ref(4, %s).get();".formatted(register.fullName(), this.base.fullName()));
       output.addLine(this, "%s += 0x4;".formatted(this.base.fullName()));

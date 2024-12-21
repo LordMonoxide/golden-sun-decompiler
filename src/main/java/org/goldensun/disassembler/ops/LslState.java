@@ -46,7 +46,7 @@ public class LslState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     if(hasDependant) {
       output.addLine(this, "%1$s = CPU.lslT(%2$s, %3$d);".formatted(this.dst.fullName(), this.src.fullName(), this.amount));
     } else {

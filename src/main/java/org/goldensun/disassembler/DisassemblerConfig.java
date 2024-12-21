@@ -35,5 +35,6 @@ public class DisassemblerConfig {
 
   public DisassemblerConfig(final DisassemblerConfig other) {
     this(other.memory, other.writer, other.functions, other.functionNameOverrides, other.docs);
+    this.switches.addAll(other.switches);
   }
 }

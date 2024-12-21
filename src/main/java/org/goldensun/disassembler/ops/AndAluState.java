@@ -29,7 +29,7 @@ public class AndAluState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     if(hasDependant) {
       output.addLine(this, "%1$s = CPU.andT(%1$s, %2$s);".formatted(this.dst.fullName(), this.src.fullName()));
     } else {

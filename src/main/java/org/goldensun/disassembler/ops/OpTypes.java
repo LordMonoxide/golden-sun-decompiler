@@ -41,7 +41,7 @@ public final class OpTypes {
   public static final OpType ORR_ALU = new Alu("ORR_ALU", OrrAluState::new);
   public static final OpType MUL_ALU = new Alu("MUL_ALU", MulAluState::new);
   public static final OpType BIC_ALU = new OpType("BIC_ALU");
-  public static final OpType MVN_ALU = new OpType("MVN_ALU");
+  public static final OpType MVN_ALU = new Alu("MVN_ALU", MvnAluState::new);
   private static final OpType[] THUMB4 = {AND_ALU, EOR_ALU, LSL_ALU, LSR_ALU, ASR_ALU, ADC_ALU, SBC_ALU, ROR_ALU, TST_ALU, NEG_ALU, CMP_ALU, CMN_ALU, ORR_ALU, MUL_ALU, BIC_ALU, MVN_ALU};
 
   // THUMB5 (hi register add/cmp/mov/bx/blx)
@@ -86,7 +86,7 @@ public final class OpTypes {
   private static final OpType[] THUMB11 = {STR_SP, LDR_SP};
 
   // THUMB12 (relative address)
-  public static final OpType ADDR_PC = new OpType("ADDR_PC");
+  public static final OpType ADDR_PC = new AddrPc();
   public static final OpType ADDR_SP = new AddrSp();
   private static final OpType[] THUMB12 = {ADDR_PC, ADDR_SP};
 
@@ -106,24 +106,24 @@ public final class OpTypes {
   private static final OpType[] THUMB15 = {STMIA, LDMIA};
 
   // THUMB16 (conditional branch)
-  public static final OpType BEQ = new ConditionalBranch("BEQ", false, false, true, false, "Z", "==");
-  public static final OpType BNE = new ConditionalBranch("BNE", false, false, true, false, "!Z", "!=");
-  public static final OpType BCS = new ConditionalBranch("BCS", false, true, false, false, "C", "unsigned >=");
-  public static final OpType BCC = new ConditionalBranch("BCC", false, true, false, false, "!C", "unsigned <");
-  public static final OpType BMI = new ConditionalBranch("BMI", false, false, false, true, "N", "negative");
-  public static final OpType BPL = new ConditionalBranch("BPL", false, false, false, true, "!N", "positive or zero");
-  public static final OpType BVS = new ConditionalBranch("BVS", true, false, false, false, "V", "overflow");
-  public static final OpType BVC = new ConditionalBranch("BVC", true, false, false, false, "!V", "no overflow");
-  public static final OpType BHI = new ConditionalBranch("BHI", false, true, true, false, "C && !Z", "unsigned >");
-  public static final OpType BLS = new ConditionalBranch("BLS", false, true, true, false, "!C || Z", "unsigned <=");
-  public static final OpType BGE = new ConditionalBranch("BGE", true, false, false, true, "N == V", ">=");
-  public static final OpType BLT = new ConditionalBranch("BLT", true, false, false, true, "N != V", "<");
-  public static final OpType BGT = new ConditionalBranch("BGT", true, false, true, true, "!Z && N == V", ">");
-  public static final OpType BLE = new ConditionalBranch("BLE", true, false, true, true, "Z || N != V", "<=");
+  public static final OpType BEQ = new ConditionalBranch("BEQ", false, false, true, false, "Z", "%s == %s", "==");
+  public static final OpType BNE = new ConditionalBranch("BNE", false, false, true, false, "!Z", "%s != %s", "!=");
+  public static final OpType BCS = new ConditionalBranch("BCS", false, true, false, false, "C", "(%s & 0xffff_ffffL) >= (%s & 0xffff_ffffL)", "unsigned >=");
+  public static final OpType BCC = new ConditionalBranch("BCC", false, true, false, false, "!C", "(%s & 0xffff_ffffL) < (%s & 0xffff_ffffL)", "unsigned <");
+  public static final OpType BMI = new ConditionalBranch("BMI", false, false, false, true, "N", "%s < 0", "negative");
+  public static final OpType BPL = new ConditionalBranch("BPL", false, false, false, true, "!N", "%s >= 0", "positive or zero");
+  public static final OpType BVS = new ConditionalBranch("BVS", true, false, false, false, "V", "", "overflow");
+  public static final OpType BVC = new ConditionalBranch("BVC", true, false, false, false, "!V", "", "no overflow");
+  public static final OpType BHI = new ConditionalBranch("BHI", false, true, true, false, "C && !Z", "(%s & 0xffff_ffffL) > (%s & 0xffff_ffffL)", "unsigned >");
+  public static final OpType BLS = new ConditionalBranch("BLS", false, true, true, false, "!C || Z", "(%s & 0xffff_ffffL) <= (%s & 0xffff_ffffL)", "unsigned <=");
+  public static final OpType BGE = new ConditionalBranch("BGE", true, false, false, true, "N == V", "%s >= %s", ">=");
+  public static final OpType BLT = new ConditionalBranch("BLT", true, false, false, true, "N != V", "%s < %s", "<");
+  public static final OpType BGT = new ConditionalBranch("BGT", true, false, true, true, "!Z && N == V", "%s > %s", ">");
+  public static final OpType BLE = new ConditionalBranch("BLE", true, false, true, true, "Z || N != V", "%s <= %s", "<=");
   private static final OpType[] THUMB16 = {BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE};
 
   // THUMB17 (SWI)
-  public static final OpType SWI = new OpType("SWI");
+  public static final OpType SWI = new Swi();
 
   // THUMB18 (unconditional branch)
   public static final OpType B = new B();

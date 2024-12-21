@@ -2,6 +2,7 @@ package org.goldensun.disassembler.ops;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.goldensun.Util;
 import org.goldensun.disassembler.CpuState;
 import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
@@ -36,7 +37,7 @@ public class MovHiState extends OpState {
   public void getReferents(final DisassemblerConfig config, final Set<Integer> referents) {
     if(this.dst == Register.R15_PC) {
       for(final SwitchConfig switchConfig : config.switches) {
-        if(this.address + 0x2 == switchConfig.address) {
+        if(Util.roundUp(this.address + 0x2, 0x4) == switchConfig.address) {
           LOGGER.info("Binding %s to switch 0x%x", this, switchConfig.address);
 
           for(int i = 0; i < switchConfig.entryCount; i++) {
@@ -52,7 +53,7 @@ public class MovHiState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     final String srcValue;
     if(this.src == Register.R15_PC) {
       srcValue = "0x%07x".formatted(this.address + 0x4);
@@ -69,7 +70,7 @@ public class MovHiState extends OpState {
       output.addLine(this, "%s = %s;".formatted(this.dst.fullName(), srcValue));
 
       for(final SwitchConfig switchConfig : config.switches) {
-        if(this.address + 0x2 == switchConfig.address) {
+        if(Util.roundUp(this.address + 0x2, 0x4) == switchConfig.address) {
           for(int i = 0; i < switchConfig.entryCount; i++) {
             final int destAddr = config.memory.get(switchConfig.address + i * 0x4, 4);
             output.addLabel(destAddr, "//case %d: // switch %07x".formatted(i, switchConfig.address));

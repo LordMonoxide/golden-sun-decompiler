@@ -22,14 +22,14 @@ public class Memory {
   }
 
   public int get(final int address, final int size) {
-    this.checkAlignment(address, size);
+//    this.checkAlignment(address, size);
 
     final Segment segment = this.getSegment(address);
     return segment.get(address - segment.getAddress(), size);
   }
 
   public void set(final int address, final int size, final int data) {
-    this.checkAlignment(address, size);
+//    this.checkAlignment(address, size);
 
     final Segment segment = this.getSegment(address);
     final int addr = address - segment.getAddress();

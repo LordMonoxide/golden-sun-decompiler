@@ -8,19 +8,14 @@ import org.goldensun.disassembler.TranslatorOutput;
 import java.util.Map;
 import java.util.Set;
 
-public class AddImmUState extends OpState {
+public class MvnAluState extends OpState {
   public final Register dst;
-  public final int immediate;
+  public final Register src;
 
-  public AddImmUState(final int address, final OpType opType, final Register dst, final int immediate) {
+  public MvnAluState(final int address, final OpType opType, final Register dst, final Register src) {
     super(address, opType);
     this.dst = dst;
-    this.immediate = immediate;
-  }
-
-  @Override
-  public boolean overflow() {
-    return true;
+    this.src = src;
   }
 
   @Override
@@ -39,22 +34,22 @@ public class AddImmUState extends OpState {
   }
 
   @Override
+  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
+    usage.get(this.dst).add(RegisterUsage.WRITE);
+    usage.get(this.src).add(RegisterUsage.READ);
+  }
+
+  @Override
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     if(hasDependant) {
-      output.addLine(this, "%1$s = CPU.addT(%1$s, 0x%2$x);".formatted(this.dst.fullName(), this.immediate));
+      output.addLine(this, "%s = CPU.mvnT(%s);".formatted(this.dst.fullName(), this.src.fullName()));
     } else {
-      output.addLine(this, "%1$s = %1$s + 0x%2$x;".formatted(this.dst.fullName(), this.immediate));
+      output.addLine(this, "%s = ~%s;".formatted(this.dst.fullName(), this.src.fullName()));
     }
   }
 
   @Override
-  public void getRegisterUsage(final Map<Register, Set<RegisterUsage>> usage) {
-    usage.get(this.dst).add(RegisterUsage.WRITE);
-    usage.get(this.dst).add(RegisterUsage.READ);
-  }
-
-  @Override
   public String toString() {
-    return "%s %s,0x%x".formatted(super.toString(), this.dst.name, this.immediate);
+    return "%s %s,%s".formatted(super.toString(), this.dst.name, this.src.name);
   }
 }

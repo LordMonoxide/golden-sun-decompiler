@@ -19,7 +19,7 @@ public class AddHiState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     if(this.src == Register.R15_PC) {
       output.addLine(this, "%s += %s + 0x4;".formatted(this.dst.fullName(), this.src.fullName()));
       return;

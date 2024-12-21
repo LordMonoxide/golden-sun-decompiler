@@ -26,7 +26,7 @@ public class BxState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     if(this.dst == Register.R14_LR) {
       output.addLine(this, "return %s;".formatted(Register.R0.fullName()));
     } else if(this.dst == Register.R15_PC) {

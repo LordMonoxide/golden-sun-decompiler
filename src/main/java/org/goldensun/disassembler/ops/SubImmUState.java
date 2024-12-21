@@ -39,7 +39,7 @@ public class SubImmUState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     if(hasDependant) {
       output.addLine(this, "%1$s = CPU.subT(%1$s, 0x%2$x);".formatted(this.dst.fullName(), this.immediate));
     } else {

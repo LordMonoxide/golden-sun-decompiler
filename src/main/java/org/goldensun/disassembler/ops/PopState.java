@@ -19,7 +19,7 @@ public class PopState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     for(final Register r : this.registers) {
       output.addLine(this, "%s = CPU.pop();".formatted(r.fullName()));
     }

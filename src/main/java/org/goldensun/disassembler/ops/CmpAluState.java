@@ -39,7 +39,7 @@ public class CmpAluState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     if(!hasDependant) {
       output.addLabel(this.address, "//TODO no dependant found for cmp");
     }

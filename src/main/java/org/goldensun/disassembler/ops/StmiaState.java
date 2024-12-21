@@ -21,7 +21,7 @@ public class StmiaState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     for(final Register register : this.registers) {
       output.addLine(this, "MEMORY.ref(4, %s).setu(%s);".formatted(this.base.fullName(), register.fullName()));
       output.addLine(this, "%s += 0x4;".formatted(this.base.fullName()));

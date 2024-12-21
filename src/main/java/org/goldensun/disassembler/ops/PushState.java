@@ -30,7 +30,7 @@ public class PushState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     for(final Register register : this.registers) {
       output.addLine(this, "CPU.push(%s);".formatted(register.fullName()));
     }

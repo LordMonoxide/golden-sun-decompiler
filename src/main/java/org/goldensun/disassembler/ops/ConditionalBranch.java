@@ -8,15 +8,17 @@ public class ConditionalBranch extends OpType {
   private final boolean readsZero;
   private final boolean readsNegative;
   private final String condition;
+  private final String conditionFormat;
   private final String hint;
 
-  public ConditionalBranch(final String name, final boolean readsOverflow, final boolean readsCarry, final boolean readsZero, final boolean readsNegative, final String condition, final String hint) {
+  public ConditionalBranch(final String name, final boolean readsOverflow, final boolean readsCarry, final boolean readsZero, final boolean readsNegative, final String condition, final String conditionFormat, final String hint) {
     super(name);
     this.readsOverflow = readsOverflow;
     this.readsCarry = readsCarry;
     this.readsZero = readsZero;
     this.readsNegative = readsNegative;
     this.condition = condition;
+    this.conditionFormat = conditionFormat;
     this.hint = hint;
   }
 
@@ -43,6 +45,6 @@ public class ConditionalBranch extends OpType {
   @Override
   public OpState parse(final int address, final int op) {
     final int offset = sign(op & 0xff, 8) * 0x2;
-    return new ConditionalBranchState(address, this, this.condition, this.hint, offset);
+    return new ConditionalBranchState(address, this, this.condition, this.conditionFormat, this.hint, offset);
   }
 }

@@ -14,6 +14,7 @@ import org.goldensun.disassembler.Translator;
 import org.goldensun.disassembler.ops.BlState;
 import org.goldensun.disassembler.ops.BxState;
 import org.goldensun.disassembler.ops.LdrPcState;
+import org.goldensun.disassembler.ops.LdrSpState;
 import org.goldensun.disassembler.ops.OpState;
 import org.goldensun.disassembler.ops.OpTypes;
 import org.goldensun.disassembler.ops.PopState;
@@ -31,10 +32,12 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.goldensun.Decompressor.decompress;
 import static org.goldensun.Decompressor.rewritePointers;
@@ -59,19 +62,43 @@ public final class Main {
     Files.deleteIfExists(Path.of("out.txt"));
     final DisassemblerConfig config = new DisassemblerConfig(memory, new PrintWriter("out.txt"));
 
+    LOGGER.info("Loading decomp code...");
+
     final DecompReader decompReader = new DecompReader();
     config.functions.putAll(decompReader.loadMethods(Path.of("../goldensun")));
 
-//    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x801e74c, 0x801e79c));
-//    config.disassemblyRanges.add(new DisassemblyRange(InstructionSet.THUMB, 0x8000000, 0x801e7ac, 0x801e7bc));
-//    config.switches.add(new SwitchConfig(0x80a4380, 6));
+//    disassembleMap(config, 3);
 
-    disassembleMap(config, 132);
+    config.address = 0x8017620;
+//    config.switches.add(new SwitchConfig(0x80aa09c, 6));
+//    loadMap(config, 132);
+    disassembleFunction(config);
 
     config.writer.close();
   }
 
-  private static void disassembleMap(final DisassemblerConfig config, final int mapId) {
+  private static void disassembleFunction(final DisassemblerConfig config) {
+    final Map<Integer, String> functions = new HashMap<>();
+    final Map<Integer, Map<Integer, OpState>> deferred = new HashMap<>();
+    disassembleFunction(config, functions, deferred, config.address);
+
+    final List<TransformedOutput> transformed = new ArrayList<>();
+
+    while(!deferred.isEmpty()) {
+      transformDeferred(config, functions, transformed, deferred);
+    }
+
+    translate(config, transformed, functions);
+
+    final String built = functions.entrySet().stream()
+      .sorted(Comparator.comparingInt(Map.Entry::getKey))
+      .map(Map.Entry::getValue)
+      .collect(Collectors.joining("\n\n"));
+
+    config.writer.println(built);
+  }
+
+  private static void loadMap(final DisassemblerConfig config, final int mapId) {
     final int pointerTableIndex = config.memory.get(0x809f1a8 + mapId * 0x8, 0x2);
     final int mapPtr = config.memory.get(0x8320000 + pointerTableIndex * 0x4, 0x4);
     final int decompressedSize = decompress(config.memory, mapPtr, 0x2008000);
@@ -83,6 +110,10 @@ public final class Main {
     } catch(final IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static void disassembleMap(final DisassemblerConfig config, final int mapId) {
+    loadMap(config, mapId);
 
     final int initPtr = config.memory.get(0x2008004, 0x4) & ~0x1;
     final int roomsPtr = config.memory.get(0x200800c, 0x4) & ~0x1;
@@ -109,9 +140,13 @@ public final class Main {
     final Map<Integer, OpState> getEventsDisassembly = disassembleFunction(config, functions, deferred, eventsPtr);
     disassembleEventHandlers(config, functions, deferred, getEventsDisassembly);
 
+    final List<TransformedOutput> transformed = new ArrayList<>();
+
     while(!deferred.isEmpty()) {
-      translateDeferred(config, functions, deferred);
+      transformDeferred(config, functions, transformed, deferred);
     }
+
+    translate(config, transformed, functions);
 
     final String built = functions.entrySet().stream()
       .sorted(Comparator.comparingInt(Map.Entry::getKey))
@@ -141,7 +176,9 @@ public final class Main {
   }
 
   private static Map<Integer, OpState> disassembleFunction(final DisassemblerConfig config, final Map<Integer, String> functions, final Map<Integer, Map<Integer, OpState>> deferred, final int address) {
-    if(functions.containsKey(address)) {
+    // Bail out if we have already decomp'd this or it already exists in the decomp
+    if(functions.containsKey(address) || config.functions.containsKey(address)) {
+      LOGGER.info("Skipping 0x%x, already decompiled", address);
       return ImmutableMap.of();
     }
 
@@ -196,6 +233,7 @@ public final class Main {
 
     // Regular function
     LOGGER.info("Disassembling function 0x%07x", address);
+    functions.put(address, ""); // so we don't try to disassemble this function again
 
     final DisassemblerConfig newConfig = new DisassemblerConfig(config);
     newConfig.address = address;
@@ -224,17 +262,8 @@ public final class Main {
     }
   }
 
-  private static void removeBxReturn(final ReferenceGraph references) {
-    final OpState last = references.last();
-
-    if(last instanceof final BxState bx && bx.dst == Register.R0) {
-      references.remove(bx);
-    }
-  }
-
-  private static List<String> translate(final DisassemblerConfig config, final Map<Integer, OpState> ops, final ReferenceGraph references) {
-    // Remove the return bx
-    removeBxReturn(references);
+  private static TransformedOutput transform(final int address, final DisassemblerConfig config, final Map<Integer, OpState> ops, final ReferenceGraph references) {
+    LOGGER.info("Building register dependency graph...");
 
     // Build up the register usage graph
     final Map<OpState, Map<Register, List<OpState>>> registerUsage = new HashMap<>();
@@ -276,7 +305,26 @@ public final class Main {
       return FlowControl.CONTINUE;
     });
 
+    // Find return values
+    final List<OpState> returnValues = new ArrayList<>();
+    references.backtrack((op, stackDepth) -> {
+      clearRegisterUsage(providerUsage);
+      op.getRegisterUsage(providerUsage);
+
+      if(providerUsage.get(Register.R0).contains(RegisterUsage.READ)) {
+        return FlowControl.TERMINATE_BRANCH;
+      }
+
+      if(providerUsage.get(Register.R0).contains(RegisterUsage.WRITE)) {
+        returnValues.add(op);
+        return FlowControl.TERMINATE_BRANCH;
+      }
+
+      return FlowControl.CONTINUE;
+    });
+
     // Find matching push/pops and remove them if they're for r0-r7 or LR
+    LOGGER.info("Removing matching push/pops for R0-R7 and LR...");
 
     // Find pushes
     final Map<Register, PushState> registerPushes = new EnumMap<>(Register.class);
@@ -288,6 +336,31 @@ public final class Main {
           if(registerUsage.get(push).get(push.registers[i]).isEmpty()) {
             registerPushes.put(push.registers[i], push);
             registerPushDepths.put(entry.getValue() + i * 0x4, push.registers[i]);
+          }
+        }
+      }
+    }
+
+    // Remove return bx
+    final OpState last = references.last();
+
+    if(last instanceof final BxState bx) {
+      final List<OpState> providers = registerUsage.get(bx).get(bx.dst);
+
+      if(providers.isEmpty() && bx.dst == Register.R14_LR) {
+        LOGGER.info("Removing bx return %s...", bx);
+        references.remove(bx);
+        registerUsage.remove(bx);
+      } else {
+        for(final OpState provider : providers) {
+          if(provider instanceof final PopState pop) {
+            for(int i = 0; i < pop.registers.length; i++) {
+              if(registerPushDepths.get(stackDepths.get(pop) - 0x4 - i * 0x4) == Register.R14_LR) {
+                LOGGER.info("Removing bx return %s...", bx);
+                references.remove(bx);
+                registerUsage.remove(bx);
+              }
+            }
           }
         }
       }
@@ -334,10 +407,56 @@ public final class Main {
       }
     }
 
+    LOGGER.info("Searching for parameters...");
+    int params = 0;
+
+    for(final var opEntry : registerUsage.entrySet()) {
+      final OpState op = opEntry.getKey();
+
+      // Registers only used in a push before being initialized are not params
+      if(!(op instanceof PushState)) {
+        // Look at each op...
+        for(final var regEntry : opEntry.getValue().entrySet()) {
+          // And if it has nothing setting it...
+          if(regEntry.getValue().isEmpty() && regEntry.getKey() != Register.R13_SP) {
+            // Check to see if the only thing that depends on this op's registers' values is a push
+            clearRegisterUsage(providerUsage);
+            op.getRegisterUsage(providerUsage);
+
+            // Get all registers that this op provides
+            final List<Register> registers = providerUsage.entrySet().stream()
+              .filter(e -> e.getValue().contains(RegisterUsage.WRITE))
+              .map(Map.Entry::getKey).toList();
+
+            boolean allRefsArePushes = true;
+            for(final Register register : registers) {
+              allRefsArePushes &= registerUsage.entrySet().stream()
+                .filter(e -> e.getValue().containsKey(register))
+                .filter(e -> e.getValue().get(register).contains(op))
+                .allMatch(e -> e.getKey() instanceof PushState);
+            }
+
+            if(registers.isEmpty() || !allRefsArePushes) {
+              params = Math.max(params, regEntry.getKey().ordinal() + 1);
+            }
+          }
+        }
+      }
+
+      // Look for stack reads that exceed the stack depth of this method (>4 params are passed in via stack)
+      if(op instanceof final LdrSpState ldrsp) {
+        if(ldrsp.offset >= stackDepths.get(ldrsp)) {
+          params = Math.max(params, (ldrsp.offset - stackDepths.get(ldrsp)) / 0x4 + 5);
+        }
+      }
+    }
+
+    config.functions.put(address, new FunctionInfo(address, "FUN_%07x".formatted(address), returnValues.isEmpty() ? "void" : "int", IntStream.range(0, params).mapToObj(i -> new ParamInfo(i < 4 ? "r" + i : "a" + i, "int")).toArray(ParamInfo[]::new)));
+
     LOGGER.info("Tracking condition dependencies...");
 
     final OpState[] conditionalOps = references.stream().filter(op -> op.opType.readsConditions()).toArray(OpState[]::new);
-    final Map<OpState, List<OpState>> conditionDependencies = new HashMap<>();
+    final Map<OpState, Set<OpState>> conditionDependencies = new HashMap<>();
 
     for(final OpState conditionalOp : conditionalOps) {
       LOGGER.info("Searching for conditions for %s...", conditionalOp);
@@ -347,7 +466,7 @@ public final class Main {
         }
 
         LOGGER.info("Op %s satisfies conditions", op);
-        conditionDependencies.computeIfAbsent(conditionalOp, k -> new ArrayList<>()).add(op);
+        conditionDependencies.computeIfAbsent(conditionalOp, k -> new HashSet<>()).add(op);
 
         return FlowControl.TERMINATE_BRANCH;
       });
@@ -355,14 +474,11 @@ public final class Main {
 
     Arrays.stream(conditionalOps).filter(op -> !conditionDependencies.containsKey(op)).forEach(failed -> LOGGER.warn("Failed to find condition for %s!", failed));
 
-    LOGGER.info("Generating output...");
-
-    final Translator translator = new Translator();
-    return translator.translate(config, references.ops(), conditionDependencies);
+    return new TransformedOutput(address, references.ops(), conditionDependencies);
   }
 
   /** We defer translation of non-thunks to ensure all thunks are available in the function map before translating the rest of the disassembly */
-  private static void translateDeferred(final DisassemblerConfig config, final Map<Integer, String> functions, final Map<Integer, Map<Integer, OpState>> deferred) {
+  private static void transformDeferred(final DisassemblerConfig config, final Map<Integer, String> functions, final List<TransformedOutput> transformed, final Map<Integer, Map<Integer, OpState>> deferred) {
     final Map<Integer, Map<Integer, OpState>> deferredCopy = new HashMap<>(deferred);
     deferred.clear();
 
@@ -373,22 +489,42 @@ public final class Main {
       final ReferenceGraph references = trace(config, ops);
       functionVisitor(config, functions, deferred, references);
 
-      String function =
-        "@Method(0x%7x)%n".formatted(address) +
-        "public static void %s() {%n".formatted(config.functionNameOverrides.getOrDefault(address, "FUN_%07x".formatted(address))) +
-        String.join("\n", translate(config, ops, references)) +
-        "\n}";
+      transformed.add(transform(address, config, ops, references));
+    }
+  }
 
-      if(config.docs.containsKey(address)) {
-        function =
-          "/**\n" +
-          config.docs.get(address).stream()
-            .map(line -> "* " + line)
-            .collect(Collectors.joining("\n")) +
-          "\n*/\n" + function;
+  private static void translate(final DisassemblerConfig config, final List<TransformedOutput> transformed, final Map<Integer, String> functions) {
+    LOGGER.info("Generating output...");
+
+    final Translator translator = new Translator();
+
+    for(final TransformedOutput t : transformed) {
+      final List<String> translated = translator.translate(t.address, config, t.ops, t.conditionDependencies);
+      final FunctionInfo functionInfo = config.functions.get(t.address);
+      final String params = Arrays.stream(functionInfo.params).map(param -> "%s %s".formatted(param.type, param.name)).collect(Collectors.joining(", "));
+
+      String function =
+        "@Method(0x%7x)%n".formatted(t.address) +
+        "public static %s %s(%s) {%n".formatted(functionInfo.returnType, config.functionNameOverrides.getOrDefault(t.address, functionInfo.name), params) +
+        String.join("\n", translated);
+
+      if(!"void".equals(functionInfo.returnType)) {
+        function += "\nreturn r0;";
       }
 
-      functions.put(address, function);
+      function +=
+        "\n}";
+
+      if(config.docs.containsKey(t.address)) {
+        function =
+          "/**\n" +
+            config.docs.get(t.address).stream()
+              .map(line -> "* " + line)
+              .collect(Collectors.joining("\n")) +
+            "\n*/\n" + function;
+      }
+
+      functions.put(t.address, function);
     }
   }
 

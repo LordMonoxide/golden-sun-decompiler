@@ -1,7 +1,9 @@
 package org.goldensun.disassembler.ops;
 
+import org.goldensun.disassembler.DisassemblerConfig;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
+import org.goldensun.disassembler.TranslatorOutput;
 
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +38,15 @@ public class AsrAluState extends OpState {
     usage.get(this.dst).add(RegisterUsage.WRITE);
     usage.get(this.dst).add(RegisterUsage.READ);
     usage.get(this.src).add(RegisterUsage.READ);
+  }
+
+  @Override
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
+    if(hasDependant) {
+      output.addLine(this, "%1$s = CPU.asrT(%1$s, %2$s);".formatted(this.dst.fullName(), this.src.fullName()));
+    } else {
+      output.addLine(this, "%1$s = %1$s >> %2$s;".formatted(this.dst.fullName(), this.src.fullName()));
+    }
   }
 
   @Override

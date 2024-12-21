@@ -31,7 +31,7 @@ public class BlState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
 //    if(config.codeContains(this.getDest())) {
 //      output.addLabel(this.getDest(), "//LAB_%07x".formatted(this.getDest()));
 //      output.addLine(this, "LAB_%07x;".formatted(this.getDest()));

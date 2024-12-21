@@ -30,7 +30,7 @@ public abstract class OpState {
     referents.add(this.address + this.opType.getSize());
   }
 
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     throw new RuntimeException("0x%x: %s translate not implemented".formatted(this.address, this.opType.name));
   }
 

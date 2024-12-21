@@ -21,7 +21,7 @@ public class LdrbRegState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     output.addLine(this, "%s = MEMORY.ref(1, %s + %s).getUnsigned();".formatted(this.dst.fullName(), this.base.fullName(), this.offset.fullName()));
   }
 

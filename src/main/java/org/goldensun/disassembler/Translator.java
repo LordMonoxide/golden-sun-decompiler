@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Translator {
-  public List<String> translate(final DisassemblerConfig config, final Set<OpState> ops, final Map<OpState, List<OpState>> conditionDependencies) {
+  public List<String> translate(final int address, final DisassemblerConfig config, final Set<OpState> ops, final Map<OpState, Set<OpState>> conditionDependencies) {
     final TranslatorOutput output = new TranslatorOutput();
     final Set<OpState> dependencies = new HashSet<>();
     conditionDependencies.values().forEach(dependencies::addAll);
@@ -22,12 +22,12 @@ public class Translator {
     }
 
     for(final OpState op : ops) {
-      op.translate(config, output, dependencies.contains(op));
+      op.translate(config, output, dependencies.contains(op), conditionDependencies.get(op));
       op.getRegisterUsage(registerUsage);
     }
 
     final List<String> out = new ArrayList<>();
-    for(int i = 0; i < 8; i++) {
+    for(int i = Math.min(4, config.functions.get(address).params.length); i < 8; i++) {
       if(registerUsage.get(Register.values()[i]).contains(RegisterUsage.WRITE)) {
         out.add("int r%x;".formatted(i));
       }

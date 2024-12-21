@@ -21,7 +21,7 @@ public class StrhImmState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     output.addLine(this, "MEMORY.ref(2, %s + 0x%x).setu(%s);".formatted(this.base.fullName(), this.immediate, this.src.fullName()));
   }
 

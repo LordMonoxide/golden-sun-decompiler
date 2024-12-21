@@ -27,7 +27,7 @@ public class AddrSpState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     output.addLine(this, "%s = %s + 0x%x;".formatted(this.dst.fullName(), Register.R13_SP.fullName(), this.offset));
   }
 

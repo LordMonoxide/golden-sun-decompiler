@@ -39,7 +39,7 @@ public class NegAluState extends OpState {
   }
 
   @Override
-  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant) {
+  public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
     if(hasDependant) {
       output.addLine(this, "%s = CPU.negT(%s);".formatted(this.dst.fullName(), this.src.fullName()));
     } else {
