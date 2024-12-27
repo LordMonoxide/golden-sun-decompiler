@@ -9,6 +9,7 @@ import org.goldensun.disassembler.FlowControl;
 import org.goldensun.disassembler.ReferenceGraph;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
+import org.goldensun.disassembler.SwitchConfig;
 import org.goldensun.disassembler.Tracer;
 import org.goldensun.disassembler.Translator;
 import org.goldensun.disassembler.ops.BlState;
@@ -36,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -52,6 +54,8 @@ public final class Main {
 
   private static final Logger LOGGER = LogManager.getFormatterLogger(Main.class);
 
+  private static final Pattern FUNCTION_PATTERN = Pattern.compile("FUN_[a-f0-9]{7}");
+
   public static void main(final String[] args) throws IOException {
     final Memory memory = new Memory();
     memory.addSegment(new Segment(0x200_0000, 0x4_0000)); // On-board work RAM
@@ -67,11 +71,11 @@ public final class Main {
     final DecompReader decompReader = new DecompReader();
     config.functions.putAll(decompReader.loadMethods(Path.of("../goldensun")));
 
-//    disassembleMap(config, 3);
+//    disassembleMap(config, 6);
 
-    config.address = 0x8017620;
-//    config.switches.add(new SwitchConfig(0x80aa09c, 6));
-//    loadMap(config, 132);
+    config.address = 0x800d340;
+    config.switches.add(new SwitchConfig(0x80275b8, 17));
+//    loadMap(config, 6);
     disassembleFunction(config);
 
     config.writer.close();
@@ -128,6 +132,12 @@ public final class Main {
     config.functionNameOverrides.put(actorsPtr, "getActors");
     config.functionNameOverrides.put(eventsPtr, "getEvents");
     config.functionNameOverrides.put(laddersPtr, "getLadders");
+    config.docs.computeIfAbsent(initPtr, k -> new ArrayList<>()).add("{@link GoldenSunVars#init_2008004}");
+    config.docs.computeIfAbsent(roomsPtr, k -> new ArrayList<>()).add("{@link GoldenSunVars#getRooms_200800c}");
+    config.docs.computeIfAbsent(transitionsPtr, k -> new ArrayList<>()).add("{@link GoldenSunVars#getTransitions_2008014}");
+    config.docs.computeIfAbsent(actorsPtr, k -> new ArrayList<>()).add("{@link GoldenSunVars#getActors_200801c}");
+    config.docs.computeIfAbsent(eventsPtr, k -> new ArrayList<>()).add("{@link GoldenSunVars#getEvents_2008024}");
+    config.docs.computeIfAbsent(laddersPtr, k -> new ArrayList<>()).add("{@link GoldenSunVars#getLadders_200802c}");
 
     final Map<Integer, String> functions = new HashMap<>();
     final Map<Integer, Map<Integer, OpState>> deferred = new HashMap<>();
@@ -167,6 +177,7 @@ public final class Main {
             final int eventHandlerPtr = config.memory.get(event + 0x8, 0x4) & ~0x1;
             if(eventHandlerPtr >= 0x2008000) {
               config.docs.put(eventHandlerPtr, List.of("Event list 0x%x handler %d".formatted(eventList, i)));
+              config.ignoreParams.add(eventHandlerPtr);
               disassembleFunction(config, functions, deferred, eventHandlerPtr);
             }
           }
@@ -201,6 +212,8 @@ public final class Main {
           name = config.functionNameOverrides.get(address);
         } else if(destName.endsWith("_")) {
           name = destName.substring(0, destName.length() - 1);
+        } else if(FUNCTION_PATTERN.matcher(destName).matches()) {
+          name = "FUN_%07x".formatted(address);
         } else {
           name = destName;
         }
@@ -503,8 +516,14 @@ public final class Main {
       final FunctionInfo functionInfo = config.functions.get(t.address);
       final String params = Arrays.stream(functionInfo.params).map(param -> "%s %s".formatted(param.type, param.name)).collect(Collectors.joining(", "));
 
-      String function =
-        "@Method(0x%7x)%n".formatted(t.address) +
+      String function;
+      if(config.ignoreParams.contains(t.address)) {
+        function = "@Method(value = 0x%7x, ignoreExtraParams = true)%n".formatted(t.address);
+      } else {
+        function = "@Method(0x%7x)%n".formatted(t.address);
+      }
+
+      function +=
         "public static %s %s(%s) {%n".formatted(functionInfo.returnType, config.functionNameOverrides.getOrDefault(t.address, functionInfo.name), params) +
         String.join("\n", translated);
 
