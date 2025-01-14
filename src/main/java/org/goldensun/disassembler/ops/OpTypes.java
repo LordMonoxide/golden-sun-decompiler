@@ -37,10 +37,10 @@ public final class OpTypes {
   public static final OpType TST_ALU = new OpType("TST_ALU");
   public static final OpType NEG_ALU = new Alu("NEG_ALU", NegAluState::new);
   public static final OpType CMP_ALU = new CmpAlu();
-  public static final OpType CMN_ALU = new OpType("CMN_ALU");
+  public static final OpType CMN_ALU = new CmnAlu();
   public static final OpType ORR_ALU = new Alu("ORR_ALU", OrrAluState::new);
   public static final OpType MUL_ALU = new Alu("MUL_ALU", MulAluState::new);
-  public static final OpType BIC_ALU = new OpType("BIC_ALU");
+  public static final OpType BIC_ALU = new Alu("BIC_ALU", BicAluState::new);
   public static final OpType MVN_ALU = new Alu("MVN_ALU", MvnAluState::new);
   private static final OpType[] THUMB4 = {AND_ALU, EOR_ALU, LSL_ALU, LSR_ALU, ASR_ALU, ADC_ALU, SBC_ALU, ROR_ALU, TST_ALU, NEG_ALU, CMP_ALU, CMN_ALU, ORR_ALU, MUL_ALU, BIC_ALU, MVN_ALU};
 
@@ -136,99 +136,103 @@ public final class OpTypes {
   public static OpState parse(final Memory memory, final int offset) {
     final int op = memory.get(offset, 2);
 
-    // THUMB2 (must be first)
-    if((op & 0xf800) == 0x1800) {
-      return THUMB2[op >>> 9 & 0x3].parse(offset, op);
-    }
-
-    // THUMB1
-    if((op & 0xe000) == 0x0) {
-      return THUMB1[op >>> 11 & 0x3].parse(offset, op);
-    }
-
-    // THUMB3
-    if((op & 0xe000) == 0x2000) {
-      return THUMB3[op >>> 11 & 0x3].parse(offset, op);
-    }
-
-    // THUMB4
-    if((op & 0xfc00) == 0x4000) {
-      return THUMB4[op >>> 6 & 0xf].parse(offset, op);
-    }
-
-    // THUMB5
-    if((op & 0xfc00) == 0x4400) {
-      return THUMB5[op >>> 8 & 0x3].parse(offset, op);
-    }
-
-    // THUMB6
-    if((op & 0xf800) == 0x4800) {
-      return LDRPC.parse(offset, op);
-    }
-
-    // THUMB7/8
-    if((op & 0xf000) == 0x5000) {
-      if((op & 0x200) == 0) {
-        return THUMB7[op >>> 10 & 0x3].parse(offset, op);
+    try {
+      // THUMB2 (must be first)
+      if((op & 0xf800) == 0x1800) {
+        return THUMB2[op >>> 9 & 0x3].parse(offset, op);
       }
 
-      return THUMB8[op >>> 10 & 0x3].parse(offset, op);
-    }
+      // THUMB1
+      if((op & 0xe000) == 0x0) {
+        return THUMB1[op >>> 11 & 0x3].parse(offset, op);
+      }
 
-    // THUMB9
-    if((op & 0xe000) == 0x6000) {
-      return THUMB9[op >>> 11 & 0x3].parse(offset, op);
-    }
+      // THUMB3
+      if((op & 0xe000) == 0x2000) {
+        return THUMB3[op >>> 11 & 0x3].parse(offset, op);
+      }
 
-    // THUMB10
-    if((op & 0xf000) == 0x8000) {
-      return THUMB10[op >>> 11 & 0x1].parse(offset, op);
-    }
+      // THUMB4
+      if((op & 0xfc00) == 0x4000) {
+        return THUMB4[op >>> 6 & 0xf].parse(offset, op);
+      }
 
-    // THUMB11
-    if((op & 0xf000) == 0x9000) {
-      return THUMB11[op >>> 11 & 0x1].parse(offset, op);
-    }
+      // THUMB5
+      if((op & 0xfc00) == 0x4400) {
+        return THUMB5[op >>> 8 & 0x3].parse(offset, op);
+      }
 
-    // THUMB12
-    if((op & 0xf000) == 0xa000) {
-      return THUMB12[op >>> 11 & 0x1].parse(offset, op);
-    }
+      // THUMB6
+      if((op & 0xf800) == 0x4800) {
+        return LDRPC.parse(offset, op);
+      }
 
-    // THUMB13
-    if((op & 0xff00) == 0xb000) {
-      return THUMB13[op >>> 7 & 0x1].parse(offset, op);
-    }
+      // THUMB7/8
+      if((op & 0xf000) == 0x5000) {
+        if((op & 0x200) == 0) {
+          return THUMB7[op >>> 10 & 0x3].parse(offset, op);
+        }
 
-    // THUMB14
-    if((op & 0xf600) == 0xb400) {
-      return THUMB14[op >>> 11 & 0x1].parse(offset, op);
-    }
+        return THUMB8[op >>> 10 & 0x3].parse(offset, op);
+      }
 
-    // THUMB15
-    if((op & 0xf000) == 0xc000) {
-      return THUMB15[op >>> 11 & 0x1].parse(offset, op);
-    }
+      // THUMB9
+      if((op & 0xe000) == 0x6000) {
+        return THUMB9[op >>> 11 & 0x3].parse(offset, op);
+      }
 
-    // THUMB17
-    if((op & 0xff00) == 0xdf00) {
-      return SWI.parse(offset, op);
-    }
+      // THUMB10
+      if((op & 0xf000) == 0x8000) {
+        return THUMB10[op >>> 11 & 0x1].parse(offset, op);
+      }
 
-    // THUMB16
-    if((op & 0xf000) == 0xd000) {
-      return THUMB16[op >>> 8 & 0xf].parse(offset, op);
-    }
+      // THUMB11
+      if((op & 0xf000) == 0x9000) {
+        return THUMB11[op >>> 11 & 0x1].parse(offset, op);
+      }
 
-    // THUMB18
-    if((op & 0xf800) == 0xe000) {
-      return B.parse(offset, op);
-    }
+      // THUMB12
+      if((op & 0xf000) == 0xa000) {
+        return THUMB12[op >>> 11 & 0x1].parse(offset, op);
+      }
 
-    // THUMB19
-    if((op & 0xf000) == 0xf000) {
-      final int op2 = memory.get(offset + 2, 2);
-      return THUMB19[1 - (op2 >>> 12 & 0x1)].parse(offset, op2 << 16 | op);
+      // THUMB13
+      if((op & 0xff00) == 0xb000) {
+        return THUMB13[op >>> 7 & 0x1].parse(offset, op);
+      }
+
+      // THUMB14
+      if((op & 0xf600) == 0xb400) {
+        return THUMB14[op >>> 11 & 0x1].parse(offset, op);
+      }
+
+      // THUMB15
+      if((op & 0xf000) == 0xc000) {
+        return THUMB15[op >>> 11 & 0x1].parse(offset, op);
+      }
+
+      // THUMB17
+      if((op & 0xff00) == 0xdf00) {
+        return SWI.parse(offset, op);
+      }
+
+      // THUMB16
+      if((op & 0xf000) == 0xd000) {
+        return THUMB16[op >>> 8 & 0xf].parse(offset, op);
+      }
+
+      // THUMB18
+      if((op & 0xf800) == 0xe000) {
+        return B.parse(offset, op);
+      }
+
+      // THUMB19
+      if((op & 0xf000) == 0xf000) {
+        final int op2 = memory.get(offset + 2, 2);
+        return THUMB19[1 - (op2 >>> 12 & 0x1)].parse(offset, op2 << 16 | op);
+      }
+    } catch(final Throwable e) {
+      throw new RuntimeException("Failed to parse op 0x%x @ 0x%x".formatted(op, offset), e);
     }
 
     throw new RuntimeException("Unknown op 0x%x @ 0x%x".formatted(op, offset));

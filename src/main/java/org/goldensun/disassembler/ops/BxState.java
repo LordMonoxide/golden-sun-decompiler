@@ -22,6 +22,12 @@ public class BxState extends OpState {
 
   @Override
   public void getReferents(final DisassemblerConfig config, final Set<Integer> referents) {
+    // This bx is treated like a call
+    if(config.bxAsCall.contains(this.address)) {
+      super.getReferents(config, referents);
+      return;
+    }
+
     LOGGER.warn("Unknowable referents for %s", this);
   }
 

@@ -1,6 +1,5 @@
 package org.goldensun;
 
-import com.google.common.collect.ImmutableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.goldensun.disassembler.Disassembler;
@@ -9,7 +8,6 @@ import org.goldensun.disassembler.FlowControl;
 import org.goldensun.disassembler.ReferenceGraph;
 import org.goldensun.disassembler.Register;
 import org.goldensun.disassembler.RegisterUsage;
-import org.goldensun.disassembler.SwitchConfig;
 import org.goldensun.disassembler.Tracer;
 import org.goldensun.disassembler.Translator;
 import org.goldensun.disassembler.ops.BlState;
@@ -71,11 +69,14 @@ public final class Main {
     final DecompReader decompReader = new DecompReader();
     config.functions.putAll(decompReader.loadMethods(Path.of("../goldensun")));
 
-//    disassembleMap(config, 6);
+//    disassembleMap(config, 4);
+//    disassembleTable(config, 0x80ee2b4, 407);
 
-    config.address = 0x800d340;
-    config.switches.add(new SwitchConfig(0x80275b8, 17));
-//    loadMap(config, 6);
+    config.address = 0x8099160;
+//    config.bxAsCall.add(0x80c128a);
+//    config.blAsB.add(0x80e65c2);
+//    config.switches.add(new SwitchConfig(0x80e4924, 101));
+    loadMap(config, 4);
     disassembleFunction(config);
 
     config.writer.close();
@@ -114,6 +115,35 @@ public final class Main {
     } catch(final IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static void disassembleTable(final DisassemblerConfig config, final int tableAddress, final int tableSize) {
+    final Map<Integer, String> functions = new HashMap<>();
+    final Map<Integer, Map<Integer, OpState>> deferred = new HashMap<>();
+
+    for(int i = 0; i < tableSize; i++) {
+      final int functionPtr = config.memory.get(tableAddress + i * 0x4, 4) & ~0x1;
+
+      if(functionPtr != 0) {
+        config.docs.computeIfAbsent(functionPtr, k -> new ArrayList<>()).add("Table %07x".formatted(tableAddress));
+        disassembleFunction(config, functions, deferred, functionPtr);
+      }
+    }
+
+    final List<TransformedOutput> transformed = new ArrayList<>();
+
+    while(!deferred.isEmpty()) {
+      transformDeferred(config, functions, transformed, deferred);
+    }
+
+    translate(config, transformed, functions);
+
+    final String built = functions.entrySet().stream()
+      .sorted(Comparator.comparingInt(Map.Entry::getKey))
+      .map(Map.Entry::getValue)
+      .collect(Collectors.joining("\n\n"));
+
+    config.writer.println(built);
   }
 
   private static void disassembleMap(final DisassemblerConfig config, final int mapId) {
@@ -190,7 +220,7 @@ public final class Main {
     // Bail out if we have already decomp'd this or it already exists in the decomp
     if(functions.containsKey(address) || config.functions.containsKey(address)) {
       LOGGER.info("Skipping 0x%x, already decompiled", address);
-      return ImmutableMap.of();
+      return Map.of();
     }
 
     // Thunk
@@ -241,7 +271,7 @@ public final class Main {
         "\n}";
 
       functions.put(address, function);
-      return ImmutableMap.of();
+      return Map.of();
     }
 
     // Regular function
@@ -286,8 +316,6 @@ public final class Main {
 
     // Backtrack from the terminal op
     references.backtrack((consumer, consumerStackDepth) -> {
-      stackDepths.put(consumer, consumerStackDepth);
-
       // Get each op's register usage
       clearRegisterUsage(consumerUsage);
       consumer.getRegisterUsage(consumerUsage);
@@ -338,6 +366,11 @@ public final class Main {
 
     // Find matching push/pops and remove them if they're for r0-r7 or LR
     LOGGER.info("Removing matching push/pops for R0-R7 and LR...");
+
+    references.backtrack((consumer, consumerStackDepth) -> {
+      stackDepths.put(consumer, consumerStackDepth);
+      return FlowControl.CONTINUE;
+    });
 
     // Find pushes
     final Map<Register, PushState> registerPushes = new EnumMap<>(Register.class);
@@ -548,6 +581,6 @@ public final class Main {
   }
 
   private static void functionVisitor(final DisassemblerConfig config, final Map<Integer, String> functions, final Map<Integer, Map<Integer, OpState>> deferred, final ReferenceGraph references) {
-    references.stream().filter(op -> op.opType == OpTypes.BL).forEach(op -> disassembleFunction(config, functions, deferred, ((BlState)op).getDest()));
+    references.stream().filter(op -> op.opType == OpTypes.BL).filter(op -> !config.blAsB.contains(op.address)).forEach(op -> disassembleFunction(config, functions, deferred, ((BlState)op).getDest()));
   }
 }

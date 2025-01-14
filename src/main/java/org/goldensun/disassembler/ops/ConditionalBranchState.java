@@ -48,6 +48,8 @@ public class ConditionalBranchState extends OpState {
           output.addLine(this, ("if(" + this.conditionFormat + ") {").formatted(cmp.a.fullName(), cmp.b.fullName()));
         } else if(op instanceof final LsrState lsr) {
           output.addLine(this, ("if(" + this.conditionFormat + ") {").formatted(lsr.dst.fullName(), 0));
+        } else if(op instanceof final CmnAluState cmn) {
+          output.addLine(this, ("if(" + this.conditionFormat + ") {").formatted("%s + %s".formatted(cmn.a.fullName(), cmn.b.fullName()), 0));
         } else {
           throw new RuntimeException(op + " condition translation not implemented");
         }

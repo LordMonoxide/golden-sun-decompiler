@@ -21,6 +21,12 @@ public class BlState extends OpState {
 
   @Override
   public void getReferents(final DisassemblerConfig config, final Set<Integer> referents) {
+    // This bl is treated like a b
+    if(config.blAsB.contains(this.address)) {
+      referents.add(this.getDest());
+      return;
+    }
+
 //    if(config.codeContains(this.getDest())) {
       // bl used as local jump treated as a regular jump
 //      referents.add(this.getDest());
@@ -32,6 +38,12 @@ public class BlState extends OpState {
 
   @Override
   public void translate(final DisassemblerConfig config, final TranslatorOutput output, final boolean hasDependant, final Set<OpState> dependencies) {
+    // This bl is treated like a b
+    if(config.blAsB.contains(this.address)) {
+      output.addLine(this, "LAB_%07x;".formatted(this.getDest()));
+      return;
+    }
+
 //    if(config.codeContains(this.getDest())) {
 //      output.addLabel(this.getDest(), "//LAB_%07x".formatted(this.getDest()));
 //      output.addLine(this, "LAB_%07x;".formatted(this.getDest()));

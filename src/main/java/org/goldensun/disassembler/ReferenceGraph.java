@@ -55,7 +55,7 @@ public class ReferenceGraph {
   /** TODO can probably run a lot of this recursion as a simple loop to reduce stack depth */
   private FlowControl backtrack(final OpState op, final BiFunction<OpState, Integer, FlowControl> visitor, final Set<OpState> visited, int stackDepth) {
     if(visited.contains(op)) {
-      return FlowControl.TERMINATE_BRANCH;
+      return FlowControl.CONTINUE;
     }
 
     stackDepth -= op.getStackDepthChange();
