@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -72,11 +73,11 @@ public final class Main {
 //    disassembleMap(config, 4);
 //    disassembleTable(config, 0x80ee2b4, 407);
 
-    config.address = 0x8099160;
+    config.address = 0x80a6b64;
 //    config.bxAsCall.add(0x80c128a);
 //    config.blAsB.add(0x80e65c2);
 //    config.switches.add(new SwitchConfig(0x80e4924, 101));
-    loadMap(config, 4);
+//    loadMap(config, 4);
     disassembleFunction(config);
 
     config.writer.close();
@@ -501,7 +502,9 @@ public final class Main {
 
     LOGGER.info("Tracking condition dependencies...");
 
+    // List of ops that read conditions
     final OpState[] conditionalOps = references.stream().filter(op -> op.opType.readsConditions()).toArray(OpState[]::new);
+    // Map of ops that that read conditions and a list of ops that supply those conditions
     final Map<OpState, Set<OpState>> conditionDependencies = new HashMap<>();
 
     for(final OpState conditionalOp : conditionalOps) {
@@ -517,6 +520,9 @@ public final class Main {
         return FlowControl.TERMINATE_BRANCH;
       });
     }
+
+    // Remove condition suppliers
+    conditionDependencies.values().stream().flatMap(Collection::stream).forEach(references::remove);
 
     Arrays.stream(conditionalOps).filter(op -> !conditionDependencies.containsKey(op)).forEach(failed -> LOGGER.warn("Failed to find condition for %s!", failed));
 

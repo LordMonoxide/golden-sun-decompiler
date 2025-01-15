@@ -45,6 +45,14 @@ public class ReferenceGraph {
   }
 
   public void remove(final OpState op) {
+    this.references.values().stream()
+      .filter(opStates -> opStates.contains(op))
+      .forEach(e -> {
+        // Remove references to op and replace them with ops that the removed op references
+        e.remove(op);
+        e.addAll(this.references.get(op));
+      });
+
     this.references.remove(op);
   }
 
